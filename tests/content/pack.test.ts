@@ -15,7 +15,7 @@ function child(overrides: Partial<RawPack> = {}): RawPack {
       title: "@child.title",
     },
     files: [],
-    locales: { "zh-CN": { "child.title": "测试剧本" } },
+    locales: { en: { "child.title": "Test scenario" }, "zh-CN": { "child.title": "测试剧本" } },
     ...overrides,
   };
 }
@@ -29,10 +29,67 @@ describe("default pack", () => {
     expect(result.ok).toBe(true);
   });
 
-  it("resolves locale text", () => {
+  it("ships English first, then Chinese", () => {
     const result = loadPack("interpreter");
     if (!result.ok) throw new Error("pack failed");
-    expect(text(result.pack, result.pack.manifest.title)).not.toMatch(/^@/);
+    expect(result.pack.languages).toEqual(["en", "zh-CN"]);
+  });
+
+  it("resolves text per language and falls back to the first language", () => {
+    const result = loadPack("interpreter");
+    if (!result.ok) throw new Error("pack failed");
+    const { pack } = result;
+    const en = text(pack, pack.manifest.title, "en");
+    const zh = text(pack, pack.manifest.title, "zh-CN");
+    expect(en).not.toMatch(/^@/);
+    expect(zh).not.toMatch(/^@/);
+    expect(en).not.toBe(zh);
+    expect(text(pack, pack.manifest.title, "fr")).toBe(en);
+    expect(text(pack, pack.manifest.title, "zh-TW")).toBe(zh);
+    expect(text(pack, pack.manifest.title)).toBe(en);
+  });
+});
+
+describe("languages", () => {
+  it("inherits the parent's languages and requires text in each", () => {
+    const result = assemblePack(child({ locales: { "zh-CN": { "child.title": "测试剧本" } } }), resolve);
+    expect(result.ok).toBe(false);
+    expect(result.issues.some((i) => i.message === "missing en text for @child.title")).toBe(true);
+  });
+
+  it("lets a pack narrow its languages", () => {
+    const result = assemblePack(
+      child({
+        manifest: { ...(child().manifest as object), languages: ["zh-CN"] },
+        locales: { "zh-CN": { "child.title": "测试剧本" } },
+      }),
+      resolve,
+    );
+    if (!result.ok) throw new Error(JSON.stringify(result.issues));
+    expect(result.pack.languages).toEqual(["zh-CN"]);
+  });
+
+  it("rejects a locale file for a language the pack does not list", () => {
+    const result = assemblePack(
+      child({ locales: { ...child().locales, fr: { "child.title": "Scénario de test" } } }),
+      resolve,
+    );
+    expect(result.ok).toBe(false);
+    expect(result.issues.some((i) => i.file.endsWith("locale/fr.yaml"))).toBe(true);
+  });
+
+  it("requires a root pack to declare its languages", () => {
+    const result = assemblePack(
+      {
+        origin: "scenarios/lonely",
+        manifest: { id: "lonely", version: "0.1.0", engine: "0", title: "@t" },
+        files: [],
+        locales: { en: { t: "Lonely" } },
+      },
+      () => undefined,
+    );
+    expect(result.ok).toBe(false);
+    expect(result.issues.some((i) => i.path === "languages")).toBe(true);
   });
 });
 

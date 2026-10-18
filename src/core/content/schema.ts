@@ -16,12 +16,22 @@ export const TextRef = z
 
 export const SystemModule = z.enum(["debt", "boons", "contracts", "rules", "oracle", "story"]);
 
+/** BCP 47 language tag as used by the game: `en`, `zh-CN`, `pt-BR`. */
+export const LanguageTag = z
+  .string()
+  .regex(/^[a-z]{2,3}(-[A-Z]{2})?$/, "language tags look like en or zh-CN");
+
 export const ScenarioManifest = z
   .object({
     id: z.string().regex(/^[a-z][a-z0-9_-]*$/),
     version: z.string().regex(/^\d+\.\d+\.\d+$/),
     engine: z.literal(ENGINE_SCHEMA_VERSION),
     extends: z.string().optional(),
+    /**
+     * Languages this pack ships, each with complete text. The first is the fallback when the
+     * player's language is not offered. A pack that extends another inherits its list if omitted.
+     */
+    languages: z.array(LanguageTag).min(1).optional(),
     title: TextRef,
     tagline: TextRef.optional(),
     systems: z.array(SystemModule).default(["debt", "boons", "contracts", "rules", "oracle", "story"]),

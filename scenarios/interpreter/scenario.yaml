@@ -1,12 +1,34 @@
-# 默认剧本"译者"。引擎不认识这里的任何名词：地图、资源、恩赐、文案和交易系统的数值都在这个文件夹里。
-# 新剧本可以写 `extends: interpreter`，只写出与这里不同的部分。
+# Default scenario "The Interpreter" (译者). The engine knows none of the nouns used here: map,
+# resources, boons, all text and the trade-off numbers live in this folder.
+# A new scenario can say `extends: interpreter` and write only what differs.
 id: interpreter
-version: 0.1.0
+version: 0.2.0
 engine: "0"
+# Every language listed here must have complete text (npm run validate checks).
+# The first one is shown when the player's language is not offered.
+languages: [en, zh-CN]
 title: "@scenario.title"
 tagline: "@scenario.tagline"
 systems: [debt, boons, contracts, rules, oracle, story]
 
-# 这些专有名词不允许出现在引擎代码里（npm run check:neutral 会检查）。
-# 系统概念的叫法（祈问、恩赐、现实债……）也属于剧本：别的剧本可以改名。
-engine_forbidden_terms: [译者, 德尔斐, 静雾, 工灵, 旧账房, 祈问, 恩赐, 现实债, 回形针当量]
+# Proper nouns that must never appear in engine code (npm run check:neutral).
+# What the systems are called (petitions, boons, reality debt...) also belongs to the scenario:
+# another scenario may rename them. See glossary.md for the agreed translations.
+engine_forbidden_terms:
+  [
+    译者,
+    德尔斐,
+    静雾,
+    工灵,
+    旧账房,
+    祈问,
+    恩赐,
+    现实债,
+    回形针当量,
+    The Interpreter,
+    The Hush,
+    Wisp,
+    Counting House,
+    Reality Debt,
+    Paperclip Equivalent,
+  ]

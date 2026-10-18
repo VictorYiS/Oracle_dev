@@ -18,10 +18,11 @@
     "test": "vitest run",
     "check:neutral": "tsx tools/check-engine-neutral.ts",
     "validate": "tsx tools/validate-scenarios.ts",
-    "check": "npm run typecheck && npm run lint && npm run test && npm run check:neutral && npm run validate",
+    "check": "npm run typecheck && npm run lint && npm run test && npm run check:neutral && npm run check:copy && npm run validate",
     "smoke": "tsx tools/smoke.ts",
     "econ": "tsx tools/econ-sim/run.ts",
-    "e2e": "playwright test"
+    "e2e": "playwright test",
+    "check:copy": "tsx tools/check-ui-copy.ts"
   },
   "dependencies": {
     "preact": "^11.0.1",

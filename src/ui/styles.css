@@ -119,9 +119,16 @@ body {
 
 .title {
   margin: 0.75rem 0 0;
-  font: 600 clamp(3.5rem, 14vw, 7.5rem) / 1 var(--font-display);
-  letter-spacing: 0.08em;
+  font: 600 clamp(2.75rem, 9vw, 5.5rem) / 1.05 var(--font-display);
+  letter-spacing: 0.01em;
   text-wrap: balance;
+}
+
+/* Two or three CJK characters carry the screen at a much larger size, loosely tracked. */
+html:lang(zh) .title {
+  font-size: clamp(3.5rem, 14vw, 7.5rem);
+  line-height: 1;
+  letter-spacing: 0.08em;
 }
 
 .tagline {
@@ -140,7 +147,7 @@ body {
 
 .reading {
   display: grid;
-  grid-template-columns: 1.5rem 4rem minmax(0, 1fr);
+  grid-template-columns: 1.5rem 5.5rem minmax(0, 1fr);
   align-items: baseline;
   gap: 0.5rem;
 }
@@ -199,4 +206,33 @@ a:focus-visible {
   color: var(--fg);
   font-family: var(--font-mono);
   font-size: 0.85rem;
+}
+
+.language {
+  position: absolute;
+  top: max(1.25rem, env(safe-area-inset-top, 0px));
+  right: max(16px, env(safe-area-inset-right, 0px));
+  display: flex;
+  gap: 0.25rem;
+  z-index: 1;
+}
+
+.language button {
+  font: 0.8rem/1 var(--font-body);
+  padding: 0.4rem 0.65rem;
+  border: 1px solid var(--grid);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.language button[aria-pressed="true"] {
+  border-color: var(--accent);
+  color: var(--fg);
+}
+
+.language button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }

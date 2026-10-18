@@ -2,9 +2,8 @@
 // resolves `extends`, merges sections by id and checks cross-references.
 // Parsing (YAML, zip, fetch) happens outside src/core.
 import type { z } from "zod";
+import { pickLanguage } from "./language";
 import { EconomyParams, LocaleTable, PackFile, ScenarioManifest, type Resource } from "./schema";
-
-export const DEFAULT_LANGUAGE = "zh-CN";
 
 export interface RawPack {
   /** Human-readable origin, used in error messages (folder path, zip name, URL). */
@@ -20,6 +19,8 @@ export interface Pack {
   manifest: ScenarioManifest;
   /** Pack ids from the root ancestor down to this pack. */
   lineage: string[];
+  /** Languages with complete text; the first is the fallback. */
+  languages: string[];
   resources: Resource[];
   economy: EconomyParams;
   locale: Record<string, LocaleTable>;
@@ -155,8 +156,21 @@ export function assemblePack(
     else locale[lang] = { ...locale[lang], ...parsed.data };
   }
 
-  // Every text reference must resolve in the default language.
-  const table = locale[DEFAULT_LANGUAGE] ?? {};
+  const languages = m.languages ?? parent?.languages;
+  if (!languages) {
+    issues.push({ file: manifestFile, path: "languages", message: "declare the languages this pack ships" });
+  }
+  for (const lang of Object.keys(raw.locales)) {
+    if (languages && !languages.includes(lang)) {
+      issues.push({
+        file: `${raw.origin}/locale/${lang}.yaml`,
+        path: "(file)",
+        message: `"${lang}" is not listed in languages [${languages.join(", ")}]`,
+      });
+    }
+  }
+
+  // Every text reference must resolve in every language the pack ships.
   const refs: { file: string; path: string; key: string | undefined }[] = [
     { file: manifestFile, path: "title", key: m.title },
     { file: manifestFile, path: "tagline", key: m.tagline },
@@ -166,23 +180,23 @@ export function assemblePack(
       key: r.name,
     })),
   ];
-  for (const ref of refs) {
-    if (ref.key && !Object.hasOwn(table, ref.key.slice(1))) {
-      issues.push({
-        file: ref.file,
-        path: ref.path,
-        message: `missing ${DEFAULT_LANGUAGE} text for ${ref.key}`,
-      });
+  for (const lang of languages ?? []) {
+    const table = locale[lang] ?? {};
+    for (const ref of refs) {
+      if (ref.key && !Object.hasOwn(table, ref.key.slice(1))) {
+        issues.push({ file: ref.file, path: ref.path, message: `missing ${lang} text for ${ref.key}` });
+      }
     }
   }
 
-  if (issues.length > 0 || !fullEconomy.success) return { ok: false, issues };
+  if (issues.length > 0 || !fullEconomy.success || !languages) return { ok: false, issues };
   return {
     ok: true,
     issues: [],
     pack: {
       manifest: m,
       lineage: [...(parent?.lineage ?? []), m.id],
+      languages,
       resources: [...resources.values()],
       economy: fullEconomy.data,
       locale,
@@ -190,10 +204,14 @@ export function assemblePack(
   };
 }
 
-/** Resolve a `@key` text reference, falling back to the key itself so missing copy is visible. */
-export function text(pack: Pack, ref: string, lang = DEFAULT_LANGUAGE): string {
+/**
+ * Resolve a `@key` text reference in the requested language. Unsupported languages fall back
+ * the way pickLanguage does; a missing key shows the key itself so the gap is visible.
+ */
+export function text(pack: Pack, ref: string, lang?: string): string {
   const key = ref.startsWith("@") ? ref.slice(1) : ref;
-  for (const table of [pack.locale[lang], pack.locale[DEFAULT_LANGUAGE]]) {
+  const chosen = pickLanguage(pack.languages, lang ? [lang] : []);
+  for (const table of [pack.locale[chosen], pack.locale[pack.languages[0] as string]]) {
     if (table && Object.hasOwn(table, key)) return table[key] as string;
   }
   return ref;

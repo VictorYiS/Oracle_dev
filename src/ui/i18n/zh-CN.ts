@@ -1,6 +1,7 @@
-// Engine UI copy. Anything a scenario could rename (system names, places, units) comes from the
-// pack's locale instead; only generic interface words live here.
-export const ui = {
+import type { Messages } from "./en";
+
+export const zhCN: Messages = {
+  language: "语言",
   build: "构建",
   channel: "渠道",
   oracle: "神谕",
@@ -13,4 +14,4 @@ export const ui = {
   next: "下一阶段 P1：世界核心与手动玩法。",
   source: "源代码",
   packError: "剧本包加载失败",
-} as const;
+};

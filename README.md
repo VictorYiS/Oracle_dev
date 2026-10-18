@@ -1,25 +1,31 @@
 # Oracle
 
-一个可以把整个定居点交给 AI 打理的经营自动化游戏。它真的很好用，好用到你渐渐看不见真实的世界。
+**English** · [中文](README.zh-CN.md)
 
-- 在线版本：https://victoryis.github.io/Oracle_dev/
-- 当前阶段：P0（工程地基）。还不能玩，只有骨架。
+A settlement and automation game where you can hand the whole settlement to an AI. It works so well that you slowly stop seeing the world.
 
-## 开发
+- Play in your browser: https://victoryis.github.io/Oracle_dev/
+- Status: P0, foundations. Nothing is playable yet; this is the skeleton the game will grow on.
 
-需要 Node 22 以上。
+## Languages
+
+The game follows your browser's language and you can switch on the title screen. It ships in English and Simplified Chinese for now. English is used when your language is not available.
+
+## Development
+
+Requires Node 22 or later.
 
 ```bash
 npm ci
-npm run dev      # 本地开发
-npm run check    # 类型、lint、单测、引擎中立性、剧本包校验
-npm run build    # 生产构建（含体积预算）
-npm run e2e      # 端到端测试（先 build）
+npm run dev      # local development server
+npm run check    # types, lint, unit tests, engine-neutrality, scenario validation
+npm run build    # production build, with the initial-payload budget
+npm run e2e      # end-to-end tests (run build first)
 ```
 
-## 剧本包
+## Scenario packs
 
-游戏内容都在 `scenarios/` 里，引擎不认识任何剧本专有名词。`scenarios/interpreter/` 是默认剧本"译者"。新剧本可以继承它，只写出不同的部分：
+All game content lives in `scenarios/`; the engine does not know a single scenario noun. `scenarios/interpreter/` is the default scenario, "The Interpreter". A new scenario can extend it and write only what differs:
 
 ```yaml
 # scenarios/my-story/scenario.yaml
@@ -30,8 +36,8 @@ extends: interpreter
 title: "@scenario.title"
 ```
 
-`npm run validate` 会检查所有剧本包，报错时给出文件名和字段。
+Every pack lists the languages it ships (`languages: [en, zh-CN]`, the first one is the fallback) and keeps its text in `locale/<language>.yaml`. `npm run validate` checks every pack and reports problems with the file and field, including any text missing in one of the listed languages.
 
-## 许可证
+## License
 
 MIT

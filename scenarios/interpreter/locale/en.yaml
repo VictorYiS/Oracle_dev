@@ -1,0 +1,12 @@
+scenario.title: The Interpreter
+scenario.tagline: In the Hush, the Oracle can only infer. You can still go and look.
+
+res.berry.name: Berries
+res.fish.name: Fish
+res.wood.name: Wood
+res.stone.name: Stone
+res.water.name: Water
+res.power.name: Power
+res.parts.name: Parts
+res.compute.name: Compute
+res.paperclip.name: Paperclips

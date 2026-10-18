@@ -7,7 +7,7 @@ for (const id of listPackIds()) {
   if (result.ok) {
     const { pack } = result;
     console.log(
-      `✓ ${id} v${pack.manifest.version} (${pack.lineage.join(" → ")}): ${pack.resources.length} resources`,
+      `✓ ${id} v${pack.manifest.version} (${pack.lineage.join(" → ")}) [${pack.languages.join(", ")}]: ${pack.resources.length} resources`,
     );
   } else {
     failed++;
