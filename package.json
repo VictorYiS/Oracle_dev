@@ -1,0 +1,46 @@
+{
+  "name": "oracle",
+  "private": true,
+  "version": "0.0.1",
+  "description": "Oracle — an agent-driven settlement & automation game where the AI is useful enough to make you stop seeing the world.",
+  "license": "MIT",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build && tsx tools/check-size.ts",
+    "preview": "vite preview",
+    "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.core.json --noEmit",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "test": "vitest run",
+    "check:neutral": "tsx tools/check-engine-neutral.ts",
+    "validate": "tsx tools/validate-scenarios.ts",
+    "check": "npm run typecheck && npm run lint && npm run test && npm run check:neutral && npm run validate",
+    "smoke": "tsx tools/smoke.ts",
+    "econ": "tsx tools/econ-sim/run.ts",
+    "e2e": "playwright test"
+  },
+  "dependencies": {
+    "preact": "^11.0.1",
+    "yaml": "^2.9.1",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@playwright/test": "^1.64.1",
+    "@preact/preset-vite": "^2.10.6",
+    "@types/node": "^26.6.5",
+    "eslint": "^10.13.0",
+    "eslint-config-prettier": "^10.1.8",
+    "globals": "^17.13.0",
+    "prettier": "^3.9.10",
+    "tsx": "^4.23.15",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.71.2",
+    "vite": "^8.3.4",
+    "vitest": "^5.0.5"
+  }
+}

@@ -1,0 +1,11 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Rng > matches the golden stream on every platform 1`] = `
+[
+  2837322924,
+  544945897,
+  479756282,
+  3500138142,
+  339756180,
+]
+`;

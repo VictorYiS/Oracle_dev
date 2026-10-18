@@ -1,0 +1,10 @@
+resources:
+  - { id: res.berry, name: "@res.berry.name", tags: [food] }
+  - { id: res.fish, name: "@res.fish.name", tags: [food] }
+  - { id: res.wood, name: "@res.wood.name", tags: [material] }
+  - { id: res.stone, name: "@res.stone.name", tags: [material] }
+  - { id: res.water, name: "@res.water.name", tags: [utility] }
+  - { id: res.power, name: "@res.power.name", tags: [utility] }
+  - { id: res.parts, name: "@res.parts.name", tags: [material] }
+  - { id: res.compute, name: "@res.compute.name", tags: [utility] }
+  - { id: res.paperclip, name: "@res.paperclip.name", tags: [curio] }

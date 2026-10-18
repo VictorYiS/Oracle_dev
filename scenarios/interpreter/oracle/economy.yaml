@@ -1,0 +1,23 @@
+# 交易系统的数值（设计文档 §6.6）。
+# 当前值来自 P0 经济模拟的推荐（docs/reports/econ-sim-v0.md）：
+# 四项设计检查都留有余量地通过；每项参数扰动 ±15% 时"适度领先"仍然成立。
+# 改动后运行 `npm run econ` 重新检查；`npm test` 也会守住这几项检查。
+economy:
+  daily_petitions: 5
+  petition_slots: { glance: 1, ponder: 2, decree: 3 }
+  petition_debt: { glance: 0.75, ponder: 1.5, decree: 3 }
+  interest_rate: 0.10
+  understanding_debt_per_rule: 0.6
+  repay:
+    verify: 1.25
+    verify_catch: 2.5
+    manual_per_hour: 0.5
+    manual_daily_cap: 2
+    translate: 3
+    fast_fraction: 0.8
+  distortion: { base: 0.015, per_debt: 0.002, max: 0.6 }
+  collection_thresholds: [30, 60, 100]
+  collection_relief: 0.45
+  collection_cooldown_days: 4
+  boon_offer_every_days: 3
+  boon_offer_size: 3

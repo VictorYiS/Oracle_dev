@@ -1,0 +1,9 @@
+dist/
+dist-*/
+node_modules/
+playwright-report/
+test-results/
+tests/**/__snapshots__/
+docs/
+*.md
+package-lock.json

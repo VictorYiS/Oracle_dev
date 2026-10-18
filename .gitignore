@@ -1,0 +1,15 @@
+node_modules/
+dist/
+dist-*/
+playwright-report/
+test-results/
+.vite/
+*.log
+.env
+.env.*
+
+# Design docs and plan stay local until the owner decides whether to publish them
+# (they contain the full story and its spoilers).
+docs/design/
+docs/plan/
+docs/reports/econ-sim-latest.md

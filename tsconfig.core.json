@@ -1,0 +1,11 @@
+{
+  // Hard rule 1: the simulation core must run headless. No DOM lib, no Node or Vite types,
+  // so any use of window/document/localStorage/console fails type-checking here.
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "lib": ["ES2023"],
+    "types": []
+  },
+  "include": ["src/core"],
+  "exclude": ["src/core/**/*.test.ts"]
+}

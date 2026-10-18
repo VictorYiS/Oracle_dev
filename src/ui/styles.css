@@ -1,0 +1,202 @@
+/* Layout: one quiet screen. A survey grid under drifting fog; the scenario title sits low-left
+   like a label in a field notebook, with the instrument readings stacked beneath it.
+   Dark-first (the design calls for a soft dark ground), with a light variant. */
+:root {
+  --bg: #11171b;
+  --fg: #dfe5e8;
+  --muted: #8b989f;
+  --grid: rgba(223, 229, 232, 0.055);
+  --fog-a: rgba(183, 166, 220, 0.1);
+  --fog-b: rgba(159, 195, 181, 0.08);
+  --seen: #f3f6f7;
+  --reading: #9fc3b5;
+  --oracle: #c2b2e6;
+  --accent: #d6b46a;
+  --font-display: "Noto Serif SC", "Source Han Serif SC", "Songti SC", STSong, SimSun, serif;
+  --font-body: system-ui, -apple-system, "PingFang SC", "Microsoft YaHei", "Noto Sans SC", sans-serif;
+  --font-mono: "JetBrains Mono", "Cascadia Mono", "SFMono-Regular", Consolas, monospace;
+  color-scheme: dark;
+}
+
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    --bg: #eef1f0;
+    --fg: #1a2227;
+    --muted: #5d6a71;
+    --grid: rgba(26, 34, 39, 0.07);
+    --fog-a: rgba(108, 85, 168, 0.08);
+    --fog-b: rgba(62, 114, 98, 0.07);
+    --seen: #0f1417;
+    --reading: #3e7262;
+    --oracle: #6c55a8;
+    --accent: #8f6b1f;
+    color-scheme: light;
+  }
+}
+
+:root[data-theme="light"] {
+  --bg: #eef1f0;
+  --fg: #1a2227;
+  --muted: #5d6a71;
+  --grid: rgba(26, 34, 39, 0.07);
+  --fog-a: rgba(108, 85, 168, 0.08);
+  --fog-b: rgba(62, 114, 98, 0.07);
+  --seen: #0f1417;
+  --reading: #3e7262;
+  --oracle: #6c55a8;
+  --accent: #8f6b1f;
+  color-scheme: light;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background-color: var(--bg);
+  background-image:
+    linear-gradient(var(--grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: 32px 32px;
+  color: var(--fg);
+  font: 15px/1.6 var(--font-body);
+}
+
+#app {
+  height: 100%;
+}
+
+.screen {
+  position: relative;
+  min-height: 100%;
+  box-sizing: border-box;
+  display: grid;
+  align-content: end;
+  gap: 2.5rem;
+  max-width: 44rem;
+  padding-block: 4rem 3rem;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  margin-inline: auto;
+}
+
+.fog {
+  position: fixed;
+  inset: -20%;
+  pointer-events: none;
+  background:
+    radial-gradient(40% 35% at 25% 35%, var(--fog-a), transparent 70%),
+    radial-gradient(45% 40% at 75% 65%, var(--fog-b), transparent 70%);
+  animation: drift 48s ease-in-out infinite alternate;
+}
+
+@keyframes drift {
+  to {
+    transform: translate3d(6%, -4%, 0) scale(1.08);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fog {
+    animation: none;
+  }
+}
+
+.masthead,
+.readings,
+.footnote {
+  position: relative;
+}
+
+.wordmark {
+  margin: 0;
+  font: 500 0.75rem/1 var(--font-mono);
+  letter-spacing: 0.42em;
+  color: var(--accent);
+}
+
+.title {
+  margin: 0.75rem 0 0;
+  font: 600 clamp(3.5rem, 14vw, 7.5rem) / 1 var(--font-display);
+  letter-spacing: 0.08em;
+  text-wrap: balance;
+}
+
+.tagline {
+  margin: 1rem 0 0;
+  max-width: 32em;
+  color: var(--muted);
+  font-size: 1.05rem;
+}
+
+.readings {
+  display: grid;
+  gap: 0.5rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--grid);
+}
+
+.reading {
+  display: grid;
+  grid-template-columns: 1.5rem 4rem minmax(0, 1fr);
+  align-items: baseline;
+  gap: 0.5rem;
+}
+
+.glyph {
+  font-family: var(--font-mono);
+  text-align: center;
+  cursor: help;
+}
+
+.glyph-seen {
+  color: var(--seen);
+}
+
+.glyph-reading {
+  color: var(--reading);
+}
+
+.glyph-narrated {
+  color: var(--oracle);
+  text-shadow: 0 0 10px var(--oracle);
+}
+
+.reading-label {
+  color: var(--muted);
+  letter-spacing: 0.08em;
+}
+
+.reading-value {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+
+.footnote {
+  display: grid;
+  gap: 0.25rem;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.footnote p {
+  margin: 0;
+}
+
+a {
+  color: var(--accent);
+}
+
+a:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+.issues {
+  color: var(--fg);
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+}
