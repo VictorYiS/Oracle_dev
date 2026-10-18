@@ -1,0 +1,8 @@
+terrain:
+  - { id: terrain.grass, name: "@terrain.grass.name", walkable: true, buildable: true, color: "#2f3d33" }
+  - { id: terrain.shore, name: "@terrain.shore.name", walkable: true, buildable: false, color: "#4a4a3c" }
+  - { id: terrain.water, name: "@terrain.water.name", walkable: false, buildable: false, color: "#1d2c3a" }
+  - { id: terrain.rock, name: "@terrain.rock.name", walkable: false, buildable: false, color: "#3b3b40" }
+  - { id: terrain.stony, name: "@terrain.stony.name", walkable: true, buildable: false, move_cost: 2, color: "#444741" }
+  - { id: terrain.ruins, name: "@terrain.ruins.name", walkable: true, buildable: false, move_cost: 2, color: "#3a3330" }
+  - { id: terrain.marsh, name: "@terrain.marsh.name", walkable: true, buildable: false, move_cost: 3, color: "#2c3a33" }

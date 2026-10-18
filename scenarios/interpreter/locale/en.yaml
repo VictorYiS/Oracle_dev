@@ -10,3 +10,51 @@ res.power.name: Power
 res.parts.name: Parts
 res.compute.name: Compute
 res.paperclip.name: Paperclips
+
+terrain.grass.name: Grass
+terrain.shore.name: Shore
+terrain.water.name: Water
+terrain.rock.name: Rock
+terrain.stony.name: Stony ground
+terrain.ruins.name: Ruins
+terrain.marsh.name: Marsh
+
+node.tree.name: Tree
+node.berry_bush.name: Berry bush
+node.stone.name: Stone outcrop
+node.fishing_spot.name: Fishing spot
+node.spring.name: Spring
+node.scrap.name: Scrap pile
+
+bld.campfire.name: Campfire
+bld.campfire.desc: Light, warmth, and a small circle the fog stays out of.
+bld.warehouse.name: Warehouse
+bld.warehouse.desc: Holds 100 more of anything. Keep the door shut.
+bld.house.name: House
+bld.house.desc: Room for two residents.
+bld.farm.name: Berry farm
+bld.farm.desc: Each worker grows 4 berries a day, more when it rains.
+bld.well.name: Well
+bld.well.desc: One worker draws 6 water a day.
+bld.workshop.name: Workshop
+bld.workshop.desc: Turns 2 wood and 1 stone into 2 parts, per worker per day.
+bld.lookout.name: Lookout
+bld.lookout.desc: Keeps the fog back for 8 tiles. What you see from here, you saw yourself.
+bld.windmill.name: Windmill
+bld.windmill.desc: One worker keeps it turning, for 5 power a day.
+
+unit.interpreter.name: You
+unit.wisp.name: Wisp
+unit.resident.name: Resident
+
+weather.clear.name: Clear
+weather.rain.name: Rain
+weather.thick_fog.name: Thick fog
+
+event.rain.message: Rain drums on the roofs. The farms will be glad of it.
+event.fog_thickens.message: The Hush thickens. Today you will see less than you think.
+event.fog_lifts.message: The fog lifts for a while.
+event.berry_season.message: The berry bushes are heavy with fruit.
+event.wanderer.message: A wanderer walks out of the fog and asks to stay.
+event.wisp_fault.message: A wisp sputters and settles in the grass. It needs a day.
+event.odd_find.message: In the ruins you find a tin of paperclips, sorted by size. Someone counted them.

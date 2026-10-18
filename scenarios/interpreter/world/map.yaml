@@ -1,0 +1,68 @@
+# 48x48, one character per tile. Generated once by a script, then owned by this file:
+# edit the rows directly. The clearing around (24,24) is where the Interpreter starts.
+map:
+  width: 48
+  height: 48
+  legend:
+    ".": { terrain: terrain.grass }
+    "T": { terrain: terrain.grass, node: node.tree }
+    "b": { terrain: terrain.grass, node: node.berry_bush }
+    "w": { terrain: terrain.grass, node: node.spring }
+    ":": { terrain: terrain.shore }
+    "f": { terrain: terrain.shore, node: node.fishing_spot }
+    "~": { terrain: terrain.water }
+    "^": { terrain: terrain.rock }
+    ",": { terrain: terrain.stony }
+    "s": { terrain: terrain.stony, node: node.stone }
+    "#": { terrain: terrain.ruins }
+    "p": { terrain: terrain.ruins, node: node.scrap }
+    "m": { terrain: terrain.marsh }
+  rows:
+    - ".T...T.TT.T....T.....TT..TTTT.T....TT,,,,,,s,,,s"
+    - "T..T......TT.T..T...T.T...TTT......T,,^^^,,,,^,,"
+    - "T.............TT......T....TT.T.TTT.,,^^^,,,^^,,"
+    - "TTTTT.....T.T...................,,.,,^^^^^^^^^^,"
+    - ".T.TTT.T.............T...TT...TT,,,,,^^^^^^^^^^s"
+    - "T......T..TT...TT.TTT.T.......TT,s,,,^^^^^^^^^^,"
+    - "..T.T.T.T.....TT..#.#.##..T.T.T.,,,,,^^^^^^^^^^,"
+    - "TTT..T.......TT....#.#.#..#p....,sss,^^^^^^^^^^,"
+    - "...T...T.TT..TTT....p##T.##TTT.Ts,,,s^^^^^^^^^^,"
+    - ".TTT.T.....TT.....#.T#T##.T.#T..,,.s,^^^^^^^^^^s"
+    - "..TT.TT.T...T...TTT#T#.#p.###..T.TTT,,^^^,,,^^,,"
+    - ".....TT...T.....TT###.#.#.###TT..TT.,,^^^,,,,^,s"
+    - "...T.T.T.T..TT.T..#T.#p.###T#TT.T....,ss,,,,,s,,"
+    - ".T..TT.T...........T..T.......TTTTT.T,,,,,.,,,,T"
+    - ".TTT.::f::..TT....T......TT.T...T..T.,,,,TT.s,sT"
+    - "..:::~~~~~f::..T.................TT...s,TTT..,.."
+    - ".:~~~~~~~~~~~:b...T...T........T.T..T...TTTTT..."
+    - ".:~~~~~~~~~~~f..........T........TT.T.TT..TTTT.."
+    - "T:~~~~~~~~~~~:T............bT...T.T.wTTT.T......"
+    - "T:~~~~~~~~~~~:.T...T..............TTT.TT.TT..TT."
+    - "T:~~~~~~~~~~~f....................T.T..TT..T...."
+    - ":~~~~~~~~~~~~~:..T............b.......T..T..T.TT"
+    - "~~~~~~~~~~~~~~~:.....................T...TTT.T.."
+    - "~~~~~~~~~~~~~~~:...............T..T...T.T....T.T"
+    - "~~~~~~~~~~~~~~~~:.b................TT.TT..T.T..T"
+    - "~~~~~~~~~~~~~~~f...................T..T..T.T.TT."
+    - ":~~~~~~~~~~~~~:....b...................T...T..TT"
+    - "T::~~~~~~~~~:f.TTT...........b.......T.T.TT.TTT."
+    - "...:::::f:::T..w..................TT...TTT.TT..."
+    - ".TT...T....T..TTTT........w...TT.TT.T......TTTTT"
+    - "T.T..T...T...T..TT...b..............TTT..TTT...."
+    - ".TT.......TTT.T.T.T..T..........TTTTT.TTT....T.."
+    - ".T.TTT..T...T..T.TTT..........T.TT....T.T...T.TT"
+    - "TT.T.T.T.TT.T...TT.TT.....TT.T.TTbT.TT...TTTT..T"
+    - ".TTTmmTT.TT.T..TT..T...T..T.T.TTT..TT..TTTT.T.T."
+    - ".TTTmmm......T..T.T.....T.T....T.T.T..T..TT...TT"
+    - "..TmmmmmmmmmT.TT.T..T....TTT.TT.T.TT..T....TT.TT"
+    - "..mmmmmmmmmmmT.T.T.T.T......T..TT.T.T.TT..T.TTTT"
+    - "mmmmmmmmmmmmmT.TTT.TT.T..T.T...T......TTT.TT.TT."
+    - "mmmmmmmmmmmmm.T..T.T..T....T........T.T..TTT...T"
+    - "mmmmmmmmmmmmmTTT.T..T.T.TTTT..TT..T.TTTTTTT.T.T."
+    - "mmmmmmmmmmmmmmT.T....TTT..T...T.TTT....TTT.T...T"
+    - "mmmmmmmmmmmmmmT.TTT.TTT.T.T.T.T..T........T.TT.T"
+    - "mmmmmmmmmmmmmm.TT.TTTT....TTT..TT.TTTT..T..TT.T."
+    - "mmmmmmmmmmmmmT..T...T.TT.......TTT..T..TTTTT.TT."
+    - "mmmmmmmmmmmmm.....TT..T..T......T.TT.T..TT...TTT"
+    - "mmmmmmmmmmmmm..T.TT...T..T.TT.T......T...T....TT"
+    - ".TmmmmmmmmmmmTTTT...TT.T....T..T.T....T.T......T"

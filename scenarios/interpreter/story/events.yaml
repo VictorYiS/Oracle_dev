@@ -1,0 +1,30 @@
+# Rolled once each dawn, in this order. Chances are per day.
+events:
+  - id: event.rain
+    message: "@event.rain.message"
+    trigger: { chance_per_day: 0.2 }
+    effects: [{ type: set_weather, weather: weather.rain }]
+  - id: event.fog_thickens
+    message: "@event.fog_thickens.message"
+    trigger: { chance_per_day: 0.12, min_day: 2 }
+    effects: [{ type: set_weather, weather: weather.thick_fog }]
+  - id: event.fog_lifts
+    message: "@event.fog_lifts.message"
+    trigger: { chance_per_day: 0.3 }
+    effects: [{ type: set_weather, weather: weather.clear }]
+  - id: event.berry_season
+    message: "@event.berry_season.message"
+    trigger: { chance_per_day: 0.1, min_day: 3 }
+    effects: [{ type: node_bonus, node: node.berry_bush, amount: 6 }]
+  - id: event.wanderer
+    message: "@event.wanderer.message"
+    trigger: { chance_per_day: 0.25, min_day: 2, needs_free_housing: true }
+    effects: [{ type: spawn_unit, unit: unit.resident, count: 1 }]
+  - id: event.wisp_fault
+    message: "@event.wisp_fault.message"
+    trigger: { chance_per_day: 0.08, min_day: 4 }
+    effects: [{ type: disable_worker, days: 1 }]
+  - id: event.odd_find
+    message: "@event.odd_find.message"
+    trigger: { chance_per_day: 0.05, min_day: 5, once: true }
+    effects: [{ type: add_resource, resource: res.paperclip, amount: 3 }]

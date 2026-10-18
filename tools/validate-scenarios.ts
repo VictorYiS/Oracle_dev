@@ -6,8 +6,15 @@ for (const id of listPackIds()) {
   const result = loadPack(id);
   if (result.ok) {
     const { pack } = result;
+    const counts = [
+      `map ${pack.map.width}×${pack.map.height}`,
+      `${pack.resources.length} resources`,
+      `${pack.buildings.length} buildings`,
+      `${pack.events.length} events`,
+      `${pack.units.length} unit types`,
+    ];
     console.log(
-      `✓ ${id} v${pack.manifest.version} (${pack.lineage.join(" → ")}) [${pack.languages.join(", ")}]: ${pack.resources.length} resources`,
+      `✓ ${id} v${pack.manifest.version} (${pack.lineage.join(" → ")}) [${pack.languages.join(", ")}]: ${counts.join(" · ")}`,
     );
   } else {
     failed++;

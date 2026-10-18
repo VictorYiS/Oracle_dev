@@ -119,11 +119,37 @@ describe("extends", () => {
 
   it("removes parent entries", () => {
     const result = assemblePack(
-      child({ files: [{ path: "x.yaml", data: { remove: { resources: ["res.paperclip"] } } }] }),
+      child({ files: [{ path: "x.yaml", data: { remove: { resources: ["res.compute"] } } }] }),
       resolve,
     );
     if (!result.ok) throw new Error(JSON.stringify(result.issues));
-    expect(result.pack.resources.some((r) => r.id === "res.paperclip")).toBe(false);
+    expect(result.pack.resources.some((r) => r.id === "res.compute")).toBe(false);
+  });
+
+  it("reports references left dangling by a removal", () => {
+    const result = assemblePack(
+      child({ files: [{ path: "x.yaml", data: { remove: { resources: ["res.paperclip"] } } }] }),
+      resolve,
+    );
+    expect(result.ok).toBe(false);
+    expect(result.issues.some((i) => i.message === 'unknown resources "res.paperclip"')).toBe(true);
+  });
+
+  it("overrides the map wholesale and checks the start still fits", () => {
+    const rows = Array.from({ length: 10 }, () => ".".repeat(10));
+    const result = assemblePack(
+      child({
+        files: [
+          {
+            path: "world/map.yaml",
+            data: { map: { width: 10, height: 10, legend: { ".": { terrain: "terrain.grass" } }, rows } },
+          },
+        ],
+      }),
+      resolve,
+    );
+    expect(result.ok).toBe(false);
+    expect(result.issues.some((i) => i.message.includes("is not a walkable tile"))).toBe(true);
   });
 
   it("reports an unknown parent", () => {

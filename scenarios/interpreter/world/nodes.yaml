@@ -1,0 +1,46 @@
+nodes:
+  - id: node.tree
+    name: "@node.tree.name"
+    yields: res.wood
+    amount: 20
+    gather_ticks: 8
+    glyph: "♣"
+    color: "#5f8a62"
+  - id: node.berry_bush
+    name: "@node.berry_bush.name"
+    yields: res.berry
+    amount: 12
+    gather_ticks: 6
+    regrow_per_day: 2
+    glyph: "✿"
+    color: "#b0607a"
+  - id: node.stone
+    name: "@node.stone.name"
+    yields: res.stone
+    amount: 30
+    gather_ticks: 12
+    glyph: "◆"
+    color: "#9a9a92"
+  - id: node.fishing_spot
+    name: "@node.fishing_spot.name"
+    yields: res.fish
+    amount: 15
+    gather_ticks: 10
+    regrow_per_day: 3
+    glyph: "≈"
+    color: "#6e9bb8"
+  - id: node.spring
+    name: "@node.spring.name"
+    yields: res.water
+    amount: 40
+    gather_ticks: 5
+    regrow_per_day: 10
+    glyph: "○"
+    color: "#7fb3c9"
+  - id: node.scrap
+    name: "@node.scrap.name"
+    yields: res.parts
+    amount: 8
+    gather_ticks: 15
+    glyph: "⚙"
+    color: "#b08d57"

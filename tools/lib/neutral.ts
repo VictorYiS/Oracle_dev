@@ -1,6 +1,6 @@
 // Hard rule 2 (docs/plan/Oracle_Dev_Plan.md §1.4): engine code never names scenario content.
 // Forbidden terms = every namespaced content id in every pack + each pack's engine_forbidden_terms.
-import type { Pack } from "../../src/core/content/pack";
+import { contentIds, type Pack } from "../../src/core/content/pack";
 
 export interface NeutralViolation {
   file: string;
@@ -12,7 +12,7 @@ export interface NeutralViolation {
 export function forbiddenTerms(packs: Pack[]): string[] {
   const terms = new Set<string>();
   for (const pack of packs) {
-    for (const r of pack.resources) terms.add(r.id);
+    for (const id of contentIds(pack)) terms.add(id);
     for (const t of pack.manifest.engine_forbidden_terms) terms.add(t);
   }
   return [...terms].sort();

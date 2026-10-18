@@ -1,0 +1,36 @@
+units:
+  - id: unit.interpreter
+    name: "@unit.interpreter.name"
+    role: avatar
+    ticks_per_tile: 4
+    sight: 5
+    carry: 10
+    food_per_day: 2
+    glyph: "@"
+    color: "#f3efe4"
+  - id: unit.wisp
+    name: "@unit.wisp.name"
+    role: worker
+    ticks_per_tile: 3
+    sight: 2
+    carry: 5
+    glyph: "w"
+    color: "#c2b2e6"
+  - id: unit.resident
+    name: "@unit.resident.name"
+    role: resident
+    ticks_per_tile: 5
+    sight: 2
+    carry: 0
+    food_per_day: 2
+    glyph: "r"
+    color: "#e0c9a6"
+
+weathers:
+  - { id: weather.clear, name: "@weather.clear.name" }
+  - { id: weather.rain, name: "@weather.rain.name", sight_delta: -1, produce_bonus: { res.berry: 1 } }
+  - { id: weather.thick_fog, name: "@weather.thick_fog.name", sight_delta: -2 }
+
+calendar:
+  day_start_minute: 360
+  dusk_minute: 1080

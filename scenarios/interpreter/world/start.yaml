@@ -1,0 +1,11 @@
+start:
+  units:
+    - { unit: unit.interpreter, at: [24, 24] }
+    - { unit: unit.wisp, at: [25, 24] }
+    - { unit: unit.resident, at: [23, 25] }
+    - { unit: unit.resident, at: [24, 25] }
+  buildings:
+    - { building: bld.campfire, at: [24, 22] }
+  stock: { res.berry: 20, res.wood: 4 }
+  weather: weather.clear
+  base_storage: 40

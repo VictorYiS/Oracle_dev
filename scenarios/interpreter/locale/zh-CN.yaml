@@ -10,3 +10,51 @@ res.power.name: 电力
 res.parts.name: 零件
 res.compute.name: 算力
 res.paperclip.name: 回形针
+
+terrain.grass.name: 草地
+terrain.shore.name: 湖岸
+terrain.water.name: 水面
+terrain.rock.name: 岩石
+terrain.stony.name: 碎石地
+terrain.ruins.name: 废墟
+terrain.marsh.name: 沼泽
+
+node.tree.name: 树
+node.berry_bush.name: 浆果丛
+node.stone.name: 石脉
+node.fishing_spot.name: 钓点
+node.spring.name: 泉眼
+node.scrap.name: 废料堆
+
+bld.campfire.name: 营火
+bld.campfire.desc: 有光，有暖，还有一小圈雾进不来的地方。
+bld.warehouse.name: 仓库
+bld.warehouse.desc: 多存 100 份任何东西。记得关门。
+bld.house.name: 住所
+bld.house.desc: 能住两个居民。
+bld.farm.name: 浆果田
+bld.farm.desc: 每个劳动力每天产 4 份浆果，下雨天更多。
+bld.well.name: 水井
+bld.well.desc: 一个劳动力每天打 6 份水。
+bld.workshop.name: 工坊
+bld.workshop.desc: 每个劳动力每天把 2 份木材和 1 份石料做成 2 个零件。
+bld.lookout.name: 瞭望台
+bld.lookout.desc: 让雾退开 8 格。从这里看到的，是你亲眼看到的。
+bld.windmill.name: 风车
+bld.windmill.desc: 一个劳动力看着它转，每天 5 份电力。
+
+unit.interpreter.name: 你
+unit.wisp.name: 工灵
+unit.resident.name: 居民
+
+weather.clear.name: 晴
+weather.rain.name: 雨
+weather.thick_fog.name: 浓雾
+
+event.rain.message: 雨点敲在屋顶上。田里会高兴的。
+event.fog_thickens.message: 静雾变浓了。今天你看到的，会比你以为的少。
+event.fog_lifts.message: 雾散了一会儿。
+event.berry_season.message: 浆果丛压弯了枝。
+event.wanderer.message: 一个流浪者从雾里走出来，问能不能留下。
+event.wisp_fault.message: 一只工灵噼啪响了两声，落进草里。它需要歇一天。
+event.odd_find.message: 你在废墟里翻到一铁盒回形针，按大小排好了。有人数过它们。

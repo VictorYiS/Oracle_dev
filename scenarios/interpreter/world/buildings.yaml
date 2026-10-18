@@ -1,0 +1,70 @@
+buildings:
+  - id: bld.campfire
+    name: "@bld.campfire.name"
+    description: "@bld.campfire.desc"
+    cost: { res.wood: 5 }
+    build_ticks: 30
+    sight: 3
+    glyph: "▲"
+    color: "#d6a35a"
+  - id: bld.warehouse
+    name: "@bld.warehouse.name"
+    description: "@bld.warehouse.desc"
+    cost: { res.wood: 10 }
+    build_ticks: 90
+    storage: 100
+    glyph: "▣"
+    color: "#a88b63"
+  - id: bld.house
+    name: "@bld.house.name"
+    description: "@bld.house.desc"
+    cost: { res.wood: 15, res.stone: 5 }
+    build_ticks: 150
+    housing: 2
+    glyph: "⌂"
+    color: "#c2a27a"
+  - id: bld.farm
+    name: "@bld.farm.name"
+    description: "@bld.farm.desc"
+    cost: { res.wood: 8 }
+    build_ticks: 60
+    workers: 2
+    produces: { res.berry: 4 }
+    glyph: "≡"
+    color: "#8fae5b"
+  - id: bld.well
+    name: "@bld.well.name"
+    description: "@bld.well.desc"
+    cost: { res.wood: 2, res.stone: 6 }
+    build_ticks: 80
+    workers: 1
+    produces: { res.water: 6 }
+    glyph: "◎"
+    color: "#7fb3c9"
+  - id: bld.workshop
+    name: "@bld.workshop.name"
+    description: "@bld.workshop.desc"
+    cost: { res.wood: 12, res.stone: 8 }
+    build_ticks: 120
+    workers: 1
+    produces: { res.parts: 2 }
+    consumes: { res.wood: 2, res.stone: 1 }
+    glyph: "⚒"
+    color: "#b08d57"
+  - id: bld.lookout
+    name: "@bld.lookout.name"
+    description: "@bld.lookout.desc"
+    cost: { res.wood: 10, res.stone: 4 }
+    build_ticks: 100
+    sight: 8
+    glyph: "♜"
+    color: "#d8d2c4"
+  - id: bld.windmill
+    name: "@bld.windmill.name"
+    description: "@bld.windmill.desc"
+    cost: { res.wood: 12, res.parts: 4 }
+    build_ticks: 140
+    workers: 1
+    produces: { res.power: 5 }
+    glyph: "✣"
+    color: "#c9c3a5"
