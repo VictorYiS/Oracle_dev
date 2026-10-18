@@ -2,15 +2,15 @@
 events:
   - id: event.rain
     message: "@event.rain.message"
-    trigger: { chance_per_day: 0.2 }
+    trigger: { chance_per_day: 0.2, weather_in: [weather.clear] }
     effects: [{ type: set_weather, weather: weather.rain }]
   - id: event.fog_thickens
     message: "@event.fog_thickens.message"
-    trigger: { chance_per_day: 0.12, min_day: 2 }
+    trigger: { chance_per_day: 0.12, min_day: 2, weather_in: [weather.clear, weather.rain] }
     effects: [{ type: set_weather, weather: weather.thick_fog }]
   - id: event.fog_lifts
     message: "@event.fog_lifts.message"
-    trigger: { chance_per_day: 0.3 }
+    trigger: { chance_per_day: 0.35, weather_in: [weather.rain, weather.thick_fog] }
     effects: [{ type: set_weather, weather: weather.clear }]
   - id: event.berry_season
     message: "@event.berry_season.message"

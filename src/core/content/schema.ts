@@ -97,6 +97,8 @@ export const Building = z
     description: TextRef,
     cost: Amounts,
     build_ticks: z.number().int().min(1),
+    /** Gatherers can deliver here. */
+    depot: z.boolean().default(false),
     /** Storage capacity added to the settlement. */
     storage: z.number().int().min(0).default(0),
     housing: z.number().int().min(0).default(0),
@@ -163,6 +165,8 @@ export const GameEvent = z
         once: z.boolean().default(false),
         /** Only while some housing is free. */
         needs_free_housing: z.boolean().default(false),
+        /** Only while the current weather is one of these. */
+        weather_in: z.array(ContentId).optional(),
       })
       .strict(),
     effects: z.array(Effect).min(1),

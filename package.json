@@ -22,7 +22,9 @@
     "smoke": "tsx tools/smoke.ts",
     "econ": "tsx tools/econ-sim/run.ts",
     "e2e": "playwright test",
-    "check:copy": "tsx tools/check-ui-copy.ts"
+    "check:copy": "tsx tools/check-ui-copy.ts",
+    "determinism": "tsx tools/determinism.ts",
+    "bench": "tsx tools/bench.ts"
   },
   "dependencies": {
     "preact": "^11.0.1",

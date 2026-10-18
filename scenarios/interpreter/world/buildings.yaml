@@ -4,6 +4,7 @@ buildings:
     description: "@bld.campfire.desc"
     cost: { res.wood: 5 }
     build_ticks: 30
+    depot: true
     sight: 3
     glyph: "▲"
     color: "#d6a35a"
@@ -12,6 +13,7 @@ buildings:
     description: "@bld.warehouse.desc"
     cost: { res.wood: 10 }
     build_ticks: 90
+    depot: true
     storage: 100
     glyph: "▣"
     color: "#a88b63"

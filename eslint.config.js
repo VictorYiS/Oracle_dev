@@ -12,6 +12,9 @@ export const corePurityRules = {
       paths: [
         { name: "preact", message: "src/core must not depend on the UI layer." },
         { name: "yaml", message: "Parsing belongs in the content loader outside src/core." },
+        // Exact names, not patterns: a pattern would also match local modules such as ./path.
+        { name: "fs", message: "src/core must not depend on Node APIs." },
+        { name: "path", message: "src/core must not depend on Node APIs." },
       ],
       patterns: [
         { group: ["preact/*", "@preact/*"], message: "src/core must not depend on the UI layer." },
@@ -19,7 +22,7 @@ export const corePurityRules = {
           group: ["**/ui/**", "**/app/**", "**/oracle-providers/**"],
           message: "src/core must not import from ui/, app/ or oracle-providers/.",
         },
-        { group: ["node:*", "fs", "path"], message: "src/core must not depend on Node APIs." },
+        { group: ["node:*"], message: "src/core must not depend on Node APIs." },
       ],
     },
   ],
@@ -61,6 +64,24 @@ export default tseslint.config(
     files: ["src/core/**/*.ts"],
     languageOptions: { globals: {} },
     rules: corePurityRules,
+  },
+  {
+    // Write boundary: outside the simulation core, the world changes only through commands.
+    // (Inside src/core the same boundary is held by tests/architecture/write-boundary.test.ts.)
+    files: ["src/ui/**/*.{ts,tsx}", "src/app/**/*.ts", "src/oracle-providers/**/*.ts", "tools/**/*.ts"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              group: ["**/world/mutate", "**/world/mutate.ts"],
+              message: "Only the world's own systems and the command bus write state. Submit a command.",
+            },
+          ],
+        },
+      ],
+    },
   },
   prettier,
 );

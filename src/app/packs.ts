@@ -27,7 +27,8 @@ function rawPacks(): Map<string, RawPack> {
     else pack.files.push({ path: rel, data });
     packs.set(id, pack);
   }
-  for (const pack of packs.values()) pack.files.sort((a, b) => a.path.localeCompare(b.path));
+  for (const pack of packs.values())
+    pack.files.sort((a, b) => (a.path < b.path ? -1 : a.path > b.path ? 1 : 0));
   return packs;
 }
 

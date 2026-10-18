@@ -1,0 +1,38 @@
+# A small test map: proves a pack can replace the parent's map without touching the engine.
+map:
+  width: 24
+  height: 24
+  legend:
+    ".": { terrain: terrain.grass }
+    "T": { terrain: terrain.grass, node: node.tree }
+    "b": { terrain: terrain.grass, node: node.berry_bush }
+    "w": { terrain: terrain.grass, node: node.spring }
+    ":": { terrain: terrain.shore }
+    "f": { terrain: terrain.shore, node: node.fishing_spot }
+    "~": { terrain: terrain.water }
+    "s": { terrain: terrain.stony, node: node.stone }
+  rows:
+    - "~~~~~~:................."
+    - "~~~~~~:................."
+    - "~~~~~f:.............ss.."
+    - "~~~~~~:.......T.......s."
+    - "~~~~~:...............T.."
+    - "~~f~:..................."
+    - "::::...................."
+    - "................T......."
+    - "........T..............."
+    - ".........b.............."
+    - "...................T...."
+    - "........................"
+    - "...T...................."
+    - "...............b........"
+    - "..........b............."
+    - ".......T................"
+    - ".................T......"
+    - "........................"
+    - "....T.............w....."
+    - "........................"
+    - "....................T..."
+    - "........................"
+    - "........................"
+    - "........................"

@@ -230,6 +230,8 @@ export function assemblePack(
     }
   }
   for (const e of list<GameEvent>("events")) {
+    for (const w of e.trigger.weather_in ?? [])
+      need(fileOf("events", e.id), `${e.id}.trigger.weather_in`, "weathers", w);
     e.effects.forEach((fx, i) => {
       const file = fileOf("events", e.id);
       const path = `${e.id}.effects.${i}`;

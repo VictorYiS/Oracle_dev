@@ -1,0 +1,3 @@
+# Override: same id as the parent's fish, new name and an extra tag.
+resources:
+  - { id: res.fish, name: "@mini.fish.name", tags: [food, fresh] }
