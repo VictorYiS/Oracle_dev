@@ -1,10 +1,22 @@
 {
-  // Hard rule 1: the simulation core must run headless. No DOM lib, no Node or Vite types,
-  // so any use of window/document/localStorage/console fails type-checking here.
-  "extends": "./tsconfig.json",
+  // Hard rule 1: the simulation core must run headless. This config stands alone (it does not
+  // extend tsconfig.json) because the app's JSX settings make TypeScript load Preact's JSX types,
+  // which reference the DOM lib. No DOM, no Node, no Vite types: any use of window, document,
+  // localStorage or console in src/core fails type-checking here.
   "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
     "lib": ["ES2023"],
-    "types": []
+    "types": [],
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "noImplicitOverride": true,
+    "noFallthroughCasesInSwitch": true,
+    "verbatimModuleSyntax": true,
+    "isolatedModules": true,
+    "skipLibCheck": true,
+    "noEmit": true
   },
   "include": ["src/core"],
   "exclude": ["src/core/**/*.test.ts"]

@@ -13,3 +13,4 @@ test-results/
 docs/design/
 docs/plan/
 docs/reports/econ-sim-latest.md
+tests/.tmp-*/

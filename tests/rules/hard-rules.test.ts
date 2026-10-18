@@ -1,5 +1,8 @@
-// Proves the two hard rules (docs/plan/Oracle_Dev_Plan.md §1.4) actually catch violations.
+// Proves the two hard rules (CLAUDE.md, "两条硬规则") actually catch violations.
+import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { join } from "node:path";
 import { ESLint } from "eslint";
+import * as ts from "typescript";
 import { describe, expect, it } from "vitest";
 import { findViolations } from "../../tools/lib/neutral";
 
@@ -9,7 +12,35 @@ const lintCore = async (code: string) => {
   return result!.messages.map((m) => m.ruleId);
 };
 
+/**
+ * Type-check a snippet with the compiler options of tsconfig.core.json. The snippet lives inside
+ * the repo so module resolution sees node_modules exactly as src/core does: that is how Preact's
+ * JSX types once leaked the DOM lib into the core config.
+ */
+function coreTypeErrors(code: string): string[] {
+  const root = join(import.meta.dirname, "..", "..");
+  const configPath = join(root, "tsconfig.core.json");
+  const config = ts.readConfigFile(configPath, (p) => ts.sys.readFile(p));
+  const { options } = ts.parseJsonConfigFileContent(config.config, ts.sys, root);
+  const dir = mkdtempSync(join(root, "tests", ".tmp-core-"));
+  try {
+    const file = join(dir, "snippet.ts");
+    writeFileSync(file, code);
+    const program = ts.createProgram([file], options);
+    return ts.getPreEmitDiagnostics(program).map((d) => ts.flattenDiagnosticMessageText(d.messageText, "\n"));
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+}
+
 describe("hard rule 1: src/core stays headless", () => {
+  it("type-checks core without DOM or Node types", () => {
+    expect(coreTypeErrors(`export const t = document.title;\n`).join("\n")).toContain("document");
+    expect(coreTypeErrors(`export const k = localStorage.length;\n`).join("\n")).toContain("localStorage");
+    expect(coreTypeErrors(`export const p = process.env;\n`).join("\n")).toContain("process");
+    expect(coreTypeErrors(`export const add = (a: number, b: number): number => a + b;\n`)).toEqual([]);
+  });
+
   it("blocks UI imports", async () => {
     expect(await lintCore(`import { h } from "preact";\nexport const x = h;\n`)).toContain(
       "no-restricted-imports",
