@@ -24,9 +24,13 @@
     "e2e": "playwright test",
     "check:copy": "tsx tools/check-ui-copy.ts",
     "determinism": "tsx tools/determinism.ts",
-    "bench": "tsx tools/bench.ts"
+    "bench": "tsx tools/bench.ts",
+    "predev": "tsx tools/bundle-packs.ts",
+    "prebuild": "tsx tools/bundle-packs.ts",
+    "prepreview": "tsx tools/bundle-packs.ts"
   },
   "dependencies": {
+    "fflate": "^0.8.3",
     "preact": "^11.0.1",
     "yaml": "^2.9.1",
     "zod": "^4.6.7"

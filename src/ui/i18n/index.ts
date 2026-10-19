@@ -12,3 +12,8 @@ export const UI_LANGUAGES: Record<string, { name: string; messages: Messages }> 
 export function messages(lang: string): Messages {
   return UI_LANGUAGES[lang]?.messages ?? en;
 }
+
+/** Fill {placeholders}. Unknown placeholders stay visible so gaps show up in review. */
+export function fmt(template: string, vars: Record<string, string | number>): string {
+  return template.replace(/\{(\w+)\}/g, (whole, key: string) => (key in vars ? String(vars[key]) : whole));
+}

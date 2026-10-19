@@ -4,6 +4,7 @@
 import { Rng } from "../random/prng";
 import type { Ctx } from "./ctx";
 import { lookup } from "./pack-index";
+import { capacity } from "./query";
 import {
   type BuildingState,
   type Cause,
@@ -50,12 +51,7 @@ export function bumpVersion(s: WorldState): void {
 
 // ---- stock ------------------------------------------------------------------------------------
 
-export function capacity(ctx: Ctx): number {
-  let total = ctx.ix.pack.start.base_storage;
-  for (const b of ctx.s.buildings)
-    if (b.complete) total += lookup(ctx.ix.buildings, b.type, "building").storage;
-  return total;
-}
+export { capacity };
 
 export function stored(s: WorldState): number {
   let total = 0;

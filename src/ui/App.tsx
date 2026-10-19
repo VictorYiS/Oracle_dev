@@ -1,76 +1,105 @@
-import { useEffect, useState } from "preact/hooks";
-import { text, type PackResult } from "../core/content/pack";
-import { detectChannel, hasClaudeSampling } from "../app/channel";
-import { BUILD_ID, REPO_URL } from "../app/config";
+// Title screen or game. Owns the loaded pack, the language and the running session.
+import { useEffect, useRef, useState } from "preact/hooks";
+import { DEFAULT_PACK } from "../app/config";
+import { installDebug } from "../app/debug";
 import { chooseLanguage, offeredLanguages, storeLanguage } from "../app/lang";
-import { messages, UI_LANGUAGES, type Messages } from "./i18n";
+import { assembleWithBundledParents, loadBundledPack, rawPackFromFiles } from "../app/packs";
+import { Session } from "../app/session";
+import { readSave } from "../app/storage";
+import type { Pack, PackIssue } from "../core/content/pack";
+import { SaveError } from "../core/game/game";
+import { UiContext } from "./context";
+import { GameScreen } from "./game/GameScreen";
+import { messages } from "./i18n";
+import { TitleScreen } from "./TitleScreen";
 
-type Glyph = "seen" | "reading" | "narrated";
-const GLYPH: Record<Glyph, string> = { seen: "◉", reading: "⚙", narrated: "◇" };
+type PackState =
+  { status: "loading" } | { status: "ok"; pack: Pack } | { status: "error"; issues: PackIssue[] };
 
-function Reading(props: { m: Messages; glyph: Glyph; label: string; value: string }) {
-  const name = props.m.provenance[props.glyph];
-  return (
-    <div class="reading">
-      <span class={`glyph glyph-${props.glyph}`} title={name} aria-label={name}>
-        {GLYPH[props.glyph]}
-      </span>
-      <span class="reading-label">{props.label}</span>
-      <span class="reading-value">{props.value}</span>
-    </div>
-  );
-}
+const randomSeed = () => {
+  const buf = new Uint32Array(1);
+  crypto.getRandomValues(buf);
+  return buf[0]!;
+};
 
-function LanguageSwitch(props: {
-  m: Messages;
-  offered: string[];
-  current: string;
-  onChange(l: string): void;
-}) {
-  if (props.offered.length < 2) return null;
-  return (
-    <nav class="language" aria-label={props.m.language}>
-      {props.offered.map((lang) => (
-        <button
-          key={lang}
-          type="button"
-          lang={lang}
-          aria-pressed={lang === props.current}
-          onClick={() => props.onChange(lang)}
-        >
-          {UI_LANGUAGES[lang]?.name ?? lang}
-        </button>
-      ))}
-    </nav>
-  );
-}
+export function App() {
+  const [packState, setPackState] = useState<PackState>({ status: "loading" });
+  const [importedFrom, setImportedFrom] = useState<string | null>(null);
+  const [problems, setProblems] = useState<PackIssue[] | null>(null);
+  const [message, setMessage] = useState<string | null>(null);
+  const [lang, setLangState] = useState(() => chooseLanguage(["en", "zh-CN"]));
+  const [session, setSessionState] = useState<Session | null>(null);
+  const [hasBrowserSave, setHasBrowserSave] = useState(false);
+  // The session the debug hook and saves see: updated the moment a session starts, not after
+  // the next render, so nothing can observe a gap between the screen and the game.
+  const live = useRef<Session | null>(null);
+  const running = useRef<Session | null>(null);
+  const setSession = (next: Session | null) => {
+    live.current = next;
+    setSessionState(next);
+  };
+  const packRef = useRef<Pack | null>(null);
 
-export function App(props: { pack: PackResult }) {
-  const packLanguages = props.pack.ok ? props.pack.pack.languages : ["en"];
-  const offered = offeredLanguages(packLanguages);
-  const [lang, setLang] = useState(() => chooseLanguage(packLanguages));
+  const pack = packState.status === "ok" ? packState.pack : null;
+  packRef.current = pack;
+  const offered = offeredLanguages(pack?.languages ?? ["en", "zh-CN"]);
   const m = messages(lang);
-  const channel = detectChannel();
-  const [sampling, setSampling] = useState<boolean | null>(null);
 
-  useEffect(() => {
-    void hasClaudeSampling().then(setSampling);
-  }, []);
+  const setLang = (next: string) => {
+    storeLanguage(next);
+    setLangState(next);
+  };
+
   useEffect(() => {
     document.documentElement.lang = lang;
   }, [lang]);
 
-  const changeLanguage = (next: string) => {
-    storeLanguage(next);
-    setLang(next);
-  };
+  useEffect(() => {
+    void loadBundledPack(DEFAULT_PACK).then((r) => {
+      if (r.ok) {
+        setPackState({ status: "ok", pack: r.pack });
+        setLangState(chooseLanguage(r.pack.languages));
+      } else setPackState({ status: "error", issues: r.issues });
+    });
+    installDebug(
+      () => live.current,
+      (seed) => {
+        if (!packRef.current) return false;
+        setSession(Session.newGame(packRef.current, seed));
+        return true;
+      },
+    );
+  }, []);
 
-  if (!props.pack.ok) {
-    return (
+  useEffect(() => {
+    if (!pack) return;
+    void readSave(pack.manifest.id).then((s) => setHasBrowserSave(Boolean(s)));
+  }, [pack, session]);
+
+  // Run exactly one session at a time.
+  useEffect(() => {
+    running.current?.stop();
+    running.current = session;
+    session?.start();
+    return () => session?.stop();
+  }, [session]);
+
+  const saveError = (e: unknown) =>
+    setMessage(e instanceof SaveError ? m.saveMenu.errors[e.code] : m.saveMenu.errors.NOT_A_SAVE);
+
+  let screen;
+  if (packState.status === "loading") {
+    screen = (
+      <main class="screen">
+        <p class="muted">{m.title.loading}</p>
+      </main>
+    );
+  } else if (packState.status === "error") {
+    screen = (
       <main class="screen">
         <h1 class="title">{m.packError}</h1>
-        <ul class="issues">
-          {props.pack.issues.map((i) => (
+        <ul class="issues" lang="en">
+          {packState.issues.map((i) => (
             <li key={`${i.file}${i.path}${i.message}`}>
               <code>{i.file}</code> · {i.path}: {i.message}
             </li>
@@ -78,36 +107,53 @@ export function App(props: { pack: PackResult }) {
         </ul>
       </main>
     );
+  } else if (session) {
+    screen = <GameScreen session={session} onReplace={setSession} />;
+  } else {
+    screen = (
+      <TitleScreen
+        pack={packState.pack}
+        importedFrom={importedFrom}
+        hasBrowserSave={hasBrowserSave}
+        problems={problems}
+        message={message}
+        onNewGame={() => setSession(Session.newGame(packState.pack, randomSeed()))}
+        onContinue={async () => {
+          try {
+            const loaded = await Session.fromBrowser(packState.pack);
+            if (loaded) setSession(loaded);
+            else setMessage(m.saveMenu.noSave);
+          } catch (e) {
+            saveError(e);
+          }
+        }}
+        onOpenSave={async (file) => {
+          try {
+            setSession(Session.fromSave(packState.pack, JSON.parse(await file.text())));
+          } catch (e) {
+            saveError(e);
+          }
+        }}
+        onImport={async (files) => {
+          setProblems(null);
+          setMessage(null);
+          try {
+            const raw = await rawPackFromFiles(files);
+            const result = await assembleWithBundledParents(raw);
+            if (!result.ok) {
+              setProblems(result.issues);
+              return;
+            }
+            setImportedFrom(raw.origin);
+            setPackState({ status: "ok", pack: result.pack });
+            setLangState(chooseLanguage(result.pack.languages));
+          } catch {
+            setMessage(m.title.noManifest);
+          }
+        }}
+      />
+    );
   }
 
-  const { pack } = props.pack;
-  const oracleStatus = sampling === null ? m.checking : sampling ? m.oracleClaude : m.oracleOffline;
-
-  return (
-    <main class="screen">
-      <div class="fog" aria-hidden="true" />
-      <LanguageSwitch m={m} offered={offered} current={lang} onChange={changeLanguage} />
-      <header class="masthead">
-        <p class="wordmark">ORACLE</p>
-        <h1 class="title">{text(pack, pack.manifest.title, lang)}</h1>
-        {pack.manifest.tagline && <p class="tagline">{text(pack, pack.manifest.tagline, lang)}</p>}
-      </header>
-
-      <section class="readings" aria-label={m.oracle}>
-        <Reading m={m} glyph="seen" label={m.build} value={BUILD_ID} />
-        <Reading m={m} glyph="reading" label={m.channel} value={m.channels[channel]} />
-        <Reading m={m} glyph="narrated" label={m.oracle} value={oracleStatus} />
-      </section>
-
-      <footer class="footnote">
-        <p>{m.stage}</p>
-        <p>{m.next}</p>
-        <p>
-          <a href={REPO_URL} target="_blank" rel="noreferrer">
-            {m.source}
-          </a>
-        </p>
-      </footer>
-    </main>
-  );
+  return <UiContext.Provider value={{ m, lang, offered, setLang }}>{screen}</UiContext.Provider>;
 }

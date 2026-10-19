@@ -58,6 +58,13 @@ export function nearestDepot(w: World, x: number, y: number): BuildingState | un
   return best;
 }
 
+/** Storage capacity: the start's base plus every completed building's storage. */
+export function capacity(w: World): number {
+  let total = w.ix.pack.start.base_storage;
+  for (const b of w.s.buildings) if (b.complete) total += lookup(w.ix.buildings, b.type, "building").storage;
+  return total;
+}
+
 export function housing(w: World): number {
   let total = 0;
   for (const b of w.s.buildings) if (b.complete) total += lookup(w.ix.buildings, b.type, "building").housing;

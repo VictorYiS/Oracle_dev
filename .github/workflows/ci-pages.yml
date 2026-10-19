@@ -26,7 +26,9 @@ jobs:
       - run: npm run check
       - run: npm run build
       - run: npm run smoke
-      - run: npx playwright install --with-deps chromium
+      - run: npm run determinism
+      - run: npm run bench
+      - run: npx playwright install --with-deps chromium firefox
       - run: npm run e2e
       - uses: actions/upload-pages-artifact@v3
         if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'

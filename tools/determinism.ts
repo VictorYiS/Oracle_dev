@@ -4,9 +4,8 @@
 import { Game } from "../src/core/game/game";
 import { botStats, playBot } from "./lib/bot";
 import { COMMAND_TYPES, REJECTIONS } from "../src/core/commands/schema";
+import { DETERMINISM } from "./lib/determinism-config";
 import { loadPack } from "./lib/read-pack";
-
-export const DETERMINISM = { pack: "interpreter", seed: 42, days: 100 } as const;
 
 const result = loadPack(DETERMINISM.pack);
 if (!result.ok) throw new Error("default pack failed to load (run npm run validate)");
