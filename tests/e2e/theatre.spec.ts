@@ -69,6 +69,7 @@ test.describe("the paper theatre", () => {
     await page.mouse.move(200, 200);
     await page.mouse.wheel(0, -120);
     await page.keyboard.press("f");
+    await page.locator('.pt-door[data-passage="passage.door_17b"]').dispatchEvent("click");
     await page.waitForTimeout(500);
     expect(await hash(page)).toBe(before);
     await expect(viewport(page)).toHaveAttribute("data-focus", "layer.street");

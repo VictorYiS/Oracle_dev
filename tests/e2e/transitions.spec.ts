@@ -3,6 +3,7 @@
 // records the time between animation frames from just before the move until just after it ends,
 // and prints the median, p95 and maximum. Budget: median ≤ 34 ms and maximum ≤ 100 ms.
 import { cpus, platform, totalmem } from "node:os";
+import { writeFileSync } from "node:fs";
 import { expect, test, type Page } from "@playwright/test";
 import { cross, newGame, pause, settled, startDay, walkTo } from "./helpers";
 
@@ -87,7 +88,9 @@ test("transitions keep the frame time down @perf", async ({ page, browserName },
       await expect(page.locator("#viewport")).toHaveAttribute("data-inspecting", "");
     }),
   );
-  await info.attach("frame-times", { body: JSON.stringify(results), contentType: "application/json" });
+  const report = info.outputPath("frame-times.json");
+  writeFileSync(report, JSON.stringify(results));
+  await info.attach("frame-times", { path: report, contentType: "application/json" });
 
   const machine = `${platform()} · ${cpus()[0]?.model ?? "?"} ×${cpus().length} · ${Math.round(totalmem() / 2 ** 30)} GB · ${browserName} ${page.context().browser()?.version() ?? ""} · ${info.project.name}`;
   console.log(`machine: ${machine}`);

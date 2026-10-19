@@ -325,7 +325,7 @@ export class Theatre {
         if (layer.scene !== scene.id || layer.kind !== "far" || !layer.skyline) continue;
         this.card(layer.id, left * 1.6, SKY_GROUND - 90, (right - left) * 2, 500, "pt-haze");
         for (const { x, drawing } of skyline(this.content, layer.skyline, left * 1.6, right * 1.2, {
-          standalone: this.bitmapScale !== null,
+          standalone: true,
         })) {
           const el = this.card(
             layer.id,
@@ -337,7 +337,7 @@ export class Theatre {
           );
           this.cullable.push({ els: [el], depth: layer.depth, x0: x, x1: x + drawing.width, out: false });
           // The skyline is never seen closer than about half size.
-          place(el, drawing.svg, drawing.width, drawing.height, this.bitmapScale && this.bitmapScale * 0.6);
+          place(el, drawing.svg, drawing.width, drawing.height, (this.bitmapScale ?? 1) * 0.6);
           el.dataset.look = layer.id;
           el.dataset.x = String(Math.round(x + drawing.width / 2));
         }
@@ -524,8 +524,9 @@ export class Theatre {
     if (el.style.transform !== transform) el.style.transform = transform;
     const shown = this.shownGroups.has(layer);
     if (el.classList.contains("pt-gone") === shown) el.classList.toggle("pt-gone", !shown);
-    el.dataset.layer = layer;
-    el.dataset.x = String(Math.round(x));
+    if (el.dataset.layer !== layer) el.dataset.layer = layer;
+    const drawnX = String(Math.round(x));
+    if (el.dataset.x !== drawnX) el.dataset.x = drawnX;
   }
 
   // ---- painting ------------------------------------------------------------------------------
@@ -549,32 +550,13 @@ export class Theatre {
     }
   }
 
-  private paint(
-    v: BuildingView,
-    style: "ink" | "oracle",
-    state: Parameters<typeof drawFacade>[1],
-    reveal: number | null,
-  ): void {
+  private paint(v: BuildingView, style: "ink" | "oracle", state: Parameters<typeof drawFacade>[1]): void {
     const id = `b${uid(v.card.el)}`;
     const standalone = this.bitmapScale !== null;
     const swap = (target: Face, d: { svg: string; width: number; height: number }) => {
-      if (reveal !== null && !this.opts.reduceMotion) {
-        const old = document.createElement("div");
-        old.className = target.face.className;
-        old.append(...target.face.childNodes);
-        old.classList.add("pt-old");
-        old.removeAttribute("data-style");
-        old.removeAttribute("data-state");
-        target.el.insertBefore(old, target.face);
-        place(target.face, d.svg, d.width, d.height, this.bitmapScale);
-        const a = target.face.animate(
-          [{ clipPath: `circle(0% at ${reveal}% 100%)` }, { clipPath: `circle(150% at ${reveal}% 100%)` }],
-          { duration: 900, easing: "ease-out" },
-        );
-        a.onfinish = a.oncancel = () => old.remove();
-      } else {
-        place(target.face, d.svg, d.width, d.height, this.bitmapScale);
-      }
+      // Redraw on a state change. Keeping duplicate 3D faces for a reveal animation makes
+      // arriving at several houses compete with the next camera move for raster work.
+      place(target.face, d.svg, d.width, d.height, this.bitmapScale);
       target.face.dataset.style = style;
       target.face.dataset.state = state;
     };
@@ -595,9 +577,7 @@ export class Theatre {
       const memory = memoryOf(w, id);
       const age = memoryAge(w, id);
       if (key !== v.key) {
-        const near = age === 0 && v.key !== "";
-        const reveal = near ? Math.max(0, Math.min(100, ((this.heroX - v.def.x) / v.def.width) * 100)) : null;
-        this.paint(v, shown.style, shown.state, reveal);
+        this.paint(v, shown.style, shown.state);
         v.key = key;
       }
       const attrs = `${memory ? 1 : 0}:${memory?.day ?? ""}:${age ?? ""}`;
@@ -933,7 +913,7 @@ export class Theatre {
       for (const v of this.buildings.values()) {
         if (v.form.grammar !== "landmark" || !v.key) continue;
         const [style, state] = v.key.split(":") as ["ink" | "oracle", Parameters<typeof drawFacade>[1]];
-        this.paint(v, style, state, null);
+        this.paint(v, style, state);
       }
     }
   }

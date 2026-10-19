@@ -162,10 +162,6 @@
 .pt-side[data-age="3"] .pt-face[data-style="ink"] {
   filter: sepia(0.62) saturate(0.42) brightness(1.1) contrast(0.85);
 }
-.pt-old {
-  position: absolute;
-}
-
 .candle {
   animation: pt-flick 1.4s infinite;
 }
