@@ -133,6 +133,7 @@ export function TitleScreen(props: Props) {
 
       <footer class="footnote">
         <p>{m.stage}</p>
+        <p>{m.next}</p>
         <p>
           <a href={REPO_URL} target="_blank" rel="noreferrer">
             {m.source}

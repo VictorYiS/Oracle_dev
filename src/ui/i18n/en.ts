@@ -12,6 +12,7 @@ export const en = {
   checking: "Checking…",
   provenance: { seen: "Seen", reading: "Reading", narrated: "Narrated" },
   stage: "P1 · The world, by hand. There is no Oracle yet: every order here is yours.",
+  next: "Next, P2: what your people believe, where each number comes from, and rules they follow on their own.",
   source: "Source code",
   packError: "The scenario pack failed to load",
   listSeparator: ", ",

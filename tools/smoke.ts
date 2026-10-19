@@ -20,7 +20,7 @@ function world(id: string, pack: Pack): void {
       .reduce((sum, [, n]) => sum + n, 0);
     const people = w.units.filter((u) => u.role !== "worker").length;
     console.log(
-      `✓ ${id}: 30 days · hash ${game.hash()} · population ${people} · food ${food} · buildings ${w.buildings.filter((b) => b.complete).length}`,
+      `✓ ${id}: world 30 days · hash ${game.hash()} · population ${people} · food ${food} · buildings ${w.buildings.filter((b) => b.complete).length}`,
     );
   } catch (e) {
     failures++;
@@ -39,7 +39,8 @@ function economy(id: string, pack: Pack): void {
       }
     }
   }
-  console.log(`✓ ${id}: economy 30 days × 3 strategies × 3 seeds`);
+  // The P0 line, unchanged (P0 acceptance A6 looks for it).
+  console.log(`✓ ${id}: 30 days × 3 strategies × 3 seeds`);
 }
 
 const packs: [string, ReturnType<typeof loadPack>][] = [

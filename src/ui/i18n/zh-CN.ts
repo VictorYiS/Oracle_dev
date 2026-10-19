@@ -11,6 +11,7 @@ export const zhCN: Messages = {
   checking: "检测中…",
   provenance: { seen: "亲见", reading: "读数", narrated: "叙述" },
   stage: "P1 · 亲手经营的世界。这里还没有神谕，每一道命令都是你下的。",
+  next: "下一阶段 P2：大家相信什么，每个数字从哪里来，还有他们会自己执行的规则。",
   source: "源代码",
   packError: "剧本包加载失败",
   listSeparator: "，",
