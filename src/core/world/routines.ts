@@ -183,7 +183,8 @@ function feed(ctx: Ctx): void {
     emit(ctx, "unit.hungry", { unit: unit.id, short: need - eaten, days: unit.hunger }, DUSK);
     if (unit.role === "resident" && unit.hunger >= HUNGER_DAYS_BEFORE_LEAVING) {
       removeUnit(ctx.s, unit.id);
-      emit(ctx, "unit.left", { unit: unit.id }, DUSK);
+      // The unit is gone from the state, so the event carries what readers need to name it.
+      emit(ctx, "unit.left", { unit: unit.id, type: unit.type }, DUSK);
     }
   }
   emit(ctx, "day.settled", { day: ctx.s.clock.day, fed, hungry }, DUSK);

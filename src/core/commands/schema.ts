@@ -11,7 +11,10 @@ const UnitId = z.string().regex(/^u\d+$/);
 const BuildingId = z.string().regex(/^b\d+$/);
 const base = {
   source: CommandSource.default("manual"),
-  /** If set, the command is refused when the world has changed since this version. */
+  /**
+   * If set, the command is refused when another command has been accepted since this version.
+   * The version counts accepted commands only: time passing and routines do not change it.
+   */
   basedOnVersion: z.number().int().min(0).optional(),
 };
 

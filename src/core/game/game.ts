@@ -16,12 +16,15 @@ export const SAVE_FORMAT = "oracle-save";
 export const SAVE_VERSION = 1;
 /** Events kept in a save; older ones can be rebuilt by replaying from the start if ever needed. */
 const SAVED_EVENTS = 500;
+/** Events kept in memory. The log is trimmed back to this once it reaches twice as many. */
+export const EVENT_LOG_LIMIT = 2000;
 
 export interface SaveFile {
   format: typeof SAVE_FORMAT;
   version: typeof SAVE_VERSION;
   engine: string;
-  pack: { id: string; version: string };
+  /** `fingerprint` is the pack's content hash without its text (packFingerprint). */
+  pack: { id: string; version: string; fingerprint: string };
   seed: number;
   /** World and event log at the last dusk (or at the start). */
   snapshot: { state: WorldState; events: WorldEvent[]; nextSeq: number };
@@ -54,9 +57,9 @@ export class Game {
   private snap: SaveFile["snapshot"];
   private recordsAtSnap = 0;
 
-  private constructor(pack: Pack, state: WorldState, events: WorldEvent[], nextSeq: number) {
-    this.ix = indexPack(pack);
-    this.ctx = { s: state, ix: this.ix, log: events };
+  private constructor(ix: PackIndex, state: WorldState, events: WorldEvent[], nextSeq: number) {
+    this.ix = ix;
+    this.ctx = { s: state, ix, log: events };
     this.nextSeq = nextSeq;
     this.snap = { state: clone(state), events: clone(events.slice(-SAVED_EVENTS)), nextSeq };
   }
@@ -64,7 +67,13 @@ export class Game {
   static create(pack: Pack, seed: number): Game {
     const ix = indexPack(pack);
     const { s, log } = createWorld(ix, seed);
-    return new Game(pack, s, log, 1);
+    return new Game(ix, s, log, 1);
+  }
+
+  /** Keep the in-memory log bounded over a long session. The log is not part of the state. */
+  private trimLog(): void {
+    const log = this.ctx.log;
+    if (log.length >= 2 * EVENT_LOG_LIMIT) log.splice(0, log.length - EVENT_LOG_LIMIT);
   }
 
   get pack(): Pack {
@@ -101,6 +110,7 @@ export class Game {
     const tick = this.ctx.s.clock.tick;
     const result = busSubmit(this.ctx, command, seq);
     this.records.push({ seq, tick, command, result: result.ok ? "ok" : result.code });
+    this.trimLog();
     return result;
   }
 
@@ -117,6 +127,7 @@ export class Game {
       };
       this.recordsAtSnap = this.records.length;
     }
+    this.trimLog();
     return done;
   }
 
@@ -132,7 +143,7 @@ export class Game {
       format: SAVE_FORMAT,
       version: SAVE_VERSION,
       engine: ENGINE_SCHEMA_VERSION,
-      pack: { ...this.ctx.s.pack },
+      pack: { ...this.ctx.s.pack, fingerprint: this.ix.fingerprint },
       seed: this.ctx.s.seed,
       snapshot: clone(this.snap),
       commands: clone(this.records.slice(this.recordsAtSnap)),
@@ -165,12 +176,15 @@ export class Game {
         `save is for ${save.pack?.id ?? "?"} ${save.pack?.version ?? "?"}, loaded pack is ${pack.manifest.id} ${pack.manifest.version}`,
       );
     }
-    const game = new Game(
-      pack,
-      clone(save.snapshot.state),
-      clone(save.snapshot.events),
-      save.snapshot.nextSeq,
-    );
+    const ix = indexPack(pack);
+    if (save.pack.fingerprint !== ix.fingerprint) {
+      // Same id and version, different content (an edited or imported copy): replay would diverge.
+      throw new SaveError(
+        "WRONG_PACK",
+        `save is for a different build of ${pack.manifest.id} ${pack.manifest.version} (content ${String(save.pack.fingerprint)}, loaded ${ix.fingerprint})`,
+      );
+    }
+    const game = new Game(ix, clone(save.snapshot.state), clone(save.snapshot.events), save.snapshot.nextSeq);
     game.hashes = [...(save.dailyHashes ?? [])];
     game.replay(save.commands);
     game.advanceTo(save.tick ?? game.ctx.s.clock.tick);

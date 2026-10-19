@@ -4,6 +4,7 @@ import {
   completeBuilding,
   type Ctx,
   emit,
+  findBuilding,
   moveUnit,
   notice,
   setJob,
@@ -12,7 +13,7 @@ import {
 } from "./mutate";
 import { lookup } from "./pack-index";
 import { findPath } from "./path";
-import { buildingById, grid, nearestDepot, nodeAt } from "./query";
+import { grid, nearestDepot, nodeAt } from "./query";
 import { tileIndex, type UnitState } from "./types";
 
 export function tickUnits(ctx: Ctx): void {
@@ -129,7 +130,7 @@ function gather(ctx: Ctx, unit: UnitState): void {
 function build(ctx: Ctx, unit: UnitState): void {
   const job = unit.job;
   if (job?.kind !== "build") return;
-  const site = buildingById(ctx.s, job.site);
+  const site = findBuilding(ctx.s, job.site);
   if (!site || site.complete) {
     setJob(unit, null);
     return;

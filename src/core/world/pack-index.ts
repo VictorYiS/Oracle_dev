@@ -9,6 +9,7 @@ import type {
   UnitType,
   Weather,
 } from "../content/schema";
+import { hashValue } from "./hash";
 
 /** Resources carrying this tag feed units with `food_per_day`. */
 export const FOOD_TAG = "food";
@@ -27,11 +28,29 @@ export interface PackIndex {
   events: GameEvent[];
   dayStart: number;
   dusk: number;
+  /** See packFingerprint. */
+  fingerprint: string;
+}
+
+/**
+ * What the simulation sees of a pack, hashed: everything but its text. Two packs with the same
+ * fingerprint run the same world from the same seed, whatever language they are read in; a save
+ * only loads into a pack with the fingerprint it was made with.
+ */
+export function packFingerprint(pack: Pack): string {
+  const { id, version, engine, extends: parent, systems } = pack.manifest;
+  return hashValue({
+    ...pack,
+    manifest: { id, version, engine, extends: parent, systems },
+    languages: undefined,
+    locale: undefined,
+  });
 }
 
 export function indexPack(pack: Pack): PackIndex {
   return {
     pack,
+    fingerprint: packFingerprint(pack),
     terrain: pack.terrain,
     terrainIndex: new Map(pack.terrain.map((t, i) => [t.id, i])),
     resources: new Map(pack.resources.map((r) => [r.id, r])),

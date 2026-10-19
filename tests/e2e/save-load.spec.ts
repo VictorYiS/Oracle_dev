@@ -8,6 +8,8 @@ import { advance, collectErrors, hash, newGame, world } from "./helpers";
 async function playABit(page: import("@playwright/test").Page) {
   await page.getByTestId("advance").click();
   await page.getByTestId("advance").click();
+  // Pause the real-time clock, so the world does not move on between the hash and the save.
+  await page.getByTestId("speed-pause").click();
   const w = await world(page);
   const you = w.units.find((u) => u.role === "avatar")!;
   await page.evaluate((id) => window.oracle!.submit({ type: "unit.gather", unit: id, at: [21, 21] }), you.id);

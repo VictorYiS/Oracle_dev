@@ -16,6 +16,7 @@ export const zhCN: Messages = {
   listSeparator: "，",
 
   title: {
+    wordmark: "ORACLE",
     newGame: "新游戏",
     continue: "继续",
     openSave: "打开存档文件",
@@ -52,6 +53,8 @@ export const zhCN: Messages = {
     units: "人手",
     weather: "天气",
     empty: "库里空空的",
+    zoomIn: "放大",
+    zoomOut: "缩小",
   },
 
   actions: {

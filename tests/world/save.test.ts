@@ -49,7 +49,11 @@ describe("saves", () => {
     const g = newGame(13);
     const save = g.toSave();
     expect(save).toMatchObject({ format: "oracle-save", version: 1, engine: "0", seed: 13 });
-    expect(save.pack).toEqual({ id: "interpreter", version: g.pack.manifest.version });
+    expect(save.pack).toEqual({
+      id: "interpreter",
+      version: g.pack.manifest.version,
+      fingerprint: expect.stringMatching(/^[0-9a-f]{16}$/),
+    });
   });
 
   it("refuse files that are not saves, are from another version, or are for another pack", () => {
@@ -71,5 +75,34 @@ describe("saves", () => {
     expect(code(save)).toBe("loaded");
     // The same save, opened with a different pack, is refused.
     expect(() => Game.fromSave(packWith([]), save)).toThrow(SaveError);
+  });
+
+  it("refuses a pack with the same id and version but different content", () => {
+    const pack = defaultPack();
+    const save = roundTrip(newGame(3, pack).toSave());
+    const edited = roundTrip(pack);
+    edited.buildings[0]!.build_ticks += 1;
+    let error: unknown;
+    try {
+      Game.fromSave(edited, save);
+    } catch (e) {
+      error = e;
+    }
+    expect(error).toBeInstanceOf(SaveError);
+    expect((error as SaveError).code).toBe("WRONG_PACK");
+    expect(() => Game.fromSave(pack, { ...save, pack: { ...save.pack, fingerprint: "0" } })).toThrow(
+      SaveError,
+    );
+  });
+
+  it("does not let text alone change the fingerprint", () => {
+    const pack = defaultPack();
+    const save = roundTrip(newGame(3, pack).toSave());
+    const retold = roundTrip(pack);
+    for (const table of Object.values(retold.locale)) {
+      for (const key of Object.keys(table)) table[key] = `${table[key]}!`;
+    }
+    retold.languages = [...retold.languages].reverse();
+    expect(() => Game.fromSave(retold, save)).not.toThrow();
   });
 });

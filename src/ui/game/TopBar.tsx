@@ -36,6 +36,7 @@ export function TopBar(props: { session: Session; onSave(): void; onHelp(): void
             key={s}
             type="button"
             aria-pressed={session.speed === s}
+            data-testid={`speed-${SPEED_NAME[s]}`}
             disabled={phase !== "day"}
             onClick={() => session.setSpeed(s)}
           >

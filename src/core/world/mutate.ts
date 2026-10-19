@@ -1,10 +1,10 @@
-// The only module that writes the true world state. It may be imported by src/core/world/**
-// (the simulation's own systems) and src/core/commands/** (the command bus); nothing else.
+// The write interface of the true world state. It may be imported by src/core/world/** (the
+// simulation's own systems) and src/core/commands/** (the command bus); nothing else.
 // Enforced by eslint.config.js and tests/architecture/write-boundary.test.ts.
 import { Rng } from "../random/prng";
 import type { Ctx } from "./ctx";
 import { lookup } from "./pack-index";
-import { capacity } from "./query";
+import { capacity, stored } from "./query";
 import {
   type BuildingState,
   type Cause,
@@ -51,12 +51,18 @@ export function bumpVersion(s: WorldState): void {
 
 // ---- stock ------------------------------------------------------------------------------------
 
-export { capacity };
+export { capacity, stored };
 
-export function stored(s: WorldState): number {
-  let total = 0;
-  for (const amount of Object.values(s.stock)) total += amount;
-  return total;
+// ---- finding things to change ------------------------------------------------------------------
+
+/** A unit to change. Read-only code uses unitById in ./query instead. */
+export function findUnit(s: WorldState, id: string): UnitState | undefined {
+  return s.units.find((u) => u.id === id);
+}
+
+/** A building or site to change. Read-only code uses buildingById in ./query instead. */
+export function findBuilding(s: WorldState, id: string): BuildingState | undefined {
+  return s.buildings.find((b) => b.id === id);
 }
 
 /** Add up to `amount`, limited by free capacity. Returns what was actually added. */

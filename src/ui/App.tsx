@@ -73,7 +73,7 @@ export function App() {
 
   useEffect(() => {
     if (!pack) return;
-    void readSave(pack.manifest.id).then((s) => setHasBrowserSave(Boolean(s)));
+    void readSave(Session.slotFor(pack)).then((s) => setHasBrowserSave(Boolean(s)));
   }, [pack, session]);
 
   // Run exactly one session at a time.

@@ -17,6 +17,7 @@ export const en = {
   listSeparator: ", ",
 
   title: {
+    wordmark: "ORACLE",
     newGame: "New game",
     continue: "Continue",
     openSave: "Open a save file",
@@ -53,6 +54,8 @@ export const en = {
     units: "Your people",
     weather: "Weather",
     empty: "Nothing in store",
+    zoomIn: "Zoom in",
+    zoomOut: "Zoom out",
   },
 
   actions: {

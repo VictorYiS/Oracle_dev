@@ -68,7 +68,10 @@ export interface WorldState {
   seed: number;
   pack: { id: string; version: string };
   clock: Clock;
-  /** Bumped by every accepted command; commands may say which version they were based on. */
+  /**
+   * The number of accepted commands. Time passing does not bump it. A command may say which
+   * version it was based on, and is refused if another command got in first.
+   */
   version: number;
   rng: RngState;
   width: number;

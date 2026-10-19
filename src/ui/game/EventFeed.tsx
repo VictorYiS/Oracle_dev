@@ -33,10 +33,12 @@ export function eventText(session: Session, m: Messages, lang: string, ev: Event
 
 export function EventFeed(props: { session: Session }) {
   const { m, lang } = useUi();
-  const events = props.session.game.events
-    .filter((e) => e.kind !== "phase.changed")
-    .slice(-SHOWN)
-    .reverse();
+  // Newest first, scanning back from the end: the log can hold thousands of events.
+  const log = props.session.game.events;
+  const events: EventView[] = [];
+  for (let i = log.length - 1; i >= 0 && events.length < SHOWN; i--) {
+    if (log[i]!.kind !== "phase.changed") events.push(log[i]!);
+  }
   return (
     <section class="feed" aria-label={m.hud.events} aria-live="polite" data-testid="events">
       <ol>

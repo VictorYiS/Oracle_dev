@@ -75,8 +75,12 @@ export default tseslint.config(
         {
           patterns: [
             {
-              group: ["**/world/mutate", "**/world/mutate.ts"],
-              message: "Only the world's own systems and the command bus write state. Submit a command.",
+              group: ["mutate", "time", "routines", "units", "create"].flatMap((name) => [
+                `**/world/${name}`,
+                `**/world/${name}.ts`,
+              ]),
+              message:
+                "Only the world's own systems, the command bus and the game facade change state. Submit a command.",
             },
           ],
         },

@@ -3,6 +3,7 @@
 import type { Pack } from "../core/content/pack";
 import type { CommandResult } from "../core/commands/schema";
 import { Game } from "../core/game/game";
+import { packFingerprint } from "../core/world/pack-index";
 import type { WorldView } from "../core/world/types";
 import { type Speed, ticksForFrame } from "./clock";
 import { readSave, writeSave } from "./storage";
@@ -97,8 +98,16 @@ export class Session {
     this.frame = requestAnimationFrame(this.loop);
   };
 
+  /**
+   * One browser slot per pack content: an imported copy of a pack with the same id never
+   * overwrites the autosave of the original.
+   */
+  static slotFor(pack: Pack, fingerprint = packFingerprint(pack)): string {
+    return `${pack.manifest.id}#${fingerprint}`;
+  }
+
   get slot(): string {
-    return this.pack.manifest.id;
+    return Session.slotFor(this.pack, this.game.ix.fingerprint);
   }
 
   saveToBrowser(): Promise<boolean> {
@@ -115,7 +124,7 @@ export class Session {
   }
 
   static async fromBrowser(pack: Pack): Promise<Session | null> {
-    const save = await readSave(pack.manifest.id);
+    const save = await readSave(Session.slotFor(pack));
     return save ? Session.fromSave(pack, save) : null;
   }
 }

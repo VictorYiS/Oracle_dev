@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "preact/hooks";
 import type { Session } from "../../app/session";
 import type { Speed } from "../../app/clock";
-import { nodeAt } from "../../core/world/query";
+import { nodeAt, placementProblem } from "../../core/world/query";
 import { useRevision, useUi } from "../context";
 import { fmt } from "../i18n";
 import { EventFeed } from "./EventFeed";
@@ -41,15 +41,9 @@ export function GameScreen(props: Props) {
     return () => clearTimeout(timer);
   }, [session.lastResult, m]);
 
-  const canPlace = (building: string, x: number, y: number): boolean => {
-    if (x < 0 || y < 0 || x >= w.width || y >= w.height) return false;
-    const tile = y * w.width + x;
-    const def = ix.buildings.get(building);
-    if (!def || w.explored[tile] !== 1 || !ix.terrain[w.terrain[tile] ?? 0]?.buildable) return false;
-    if (w.buildings.some((b) => b.x === x && b.y === y)) return false;
-    if ((nodeAt(w, tile)?.amount ?? 0) > 0) return false;
-    return Object.entries(def.cost).every(([res, n]) => (w.stock[res] ?? 0) >= n);
-  };
+  // The same check the command bus makes, so the ghost never promises what the bus refuses.
+  const canPlace = (building: string, x: number, y: number): boolean =>
+    placementProblem({ s: w, ix }, building, x, y) === null;
 
   const order = (kind: "move" | "gather" | "build", unit: string, x: number, y: number) => {
     if (kind === "move") return session.submit({ type: "unit.move", unit, to: [x, y] });
@@ -96,13 +90,22 @@ export function GameScreen(props: Props) {
     );
   };
 
+  // What the key handler reads, current as of the last render. Re-binding the handler in an
+  // effect would be too late: a key pressed just after a dialog opens must already see it.
+  const keyState = useRef({ selection, overlay });
+  keyState.current = { selection, overlay };
+
   // Keyboard.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.target instanceof HTMLInputElement || e.ctrlKey || e.metaKey || e.altKey) return;
       const k = e.key;
+      const { selection, overlay } = keyState.current;
+      // A focused button keeps Space and Enter; an open dialog keeps every key but Escape.
+      if ((k === " " || k === "Enter") && e.target instanceof HTMLButtonElement) return;
+      if (overlay && k !== "Escape") return;
       const selectedUnit =
-        selection?.kind === "unit" ? w.units.find((u) => u.id === selection.id) : undefined;
+        selection?.kind === "unit" ? session.world.units.find((u) => u.id === selection.id) : undefined;
       const handled = (() => {
         if (k === " ") {
           if (session.speed === 0) session.setSpeed(lastSpeed.current);
@@ -132,9 +135,19 @@ export function GameScreen(props: Props) {
       })();
       if (handled) e.preventDefault();
     };
+    // A button clicked with the mouse gives focus back, so Space and Enter stay game keys for
+    // mouse players; keyboard players who tab to a button keep it focused and activate it.
+    const onPointerUp = (e: PointerEvent) => {
+      const button = e.target instanceof Element ? e.target.closest("button") : null;
+      if (e.pointerType === "mouse" && button && document.activeElement === button) button.blur();
+    };
     window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [session, selection, overlay, w]);
+    window.addEventListener("pointerup", onPointerUp);
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      window.removeEventListener("pointerup", onPointerUp);
+    };
+  }, [session]);
 
   const hint =
     mode?.kind === "place"
@@ -175,10 +188,10 @@ export function GameScreen(props: Props) {
           </div>
         )}
         <div class="zoom">
-          <button type="button" aria-label="+" onClick={() => map.current?.zoom(1.2)}>
+          <button type="button" aria-label={m.hud.zoomIn} onClick={() => map.current?.zoom(1.2)}>
             +
           </button>
-          <button type="button" aria-label="−" onClick={() => map.current?.zoom(1 / 1.2)}>
+          <button type="button" aria-label={m.hud.zoomOut} onClick={() => map.current?.zoom(1 / 1.2)}>
             −
           </button>
         </div>

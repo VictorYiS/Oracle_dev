@@ -4,6 +4,8 @@ import {
   bumpVersion,
   type Ctx,
   emit,
+  findBuilding,
+  findUnit,
   placeBuilding,
   setJob,
   setPath,
@@ -12,7 +14,7 @@ import {
 } from "../world/mutate";
 import { lookup } from "../world/pack-index";
 import { findPath } from "../world/path";
-import { buildingAt, buildingById, grid, isExplored, nodeAt, unitById, workersAt } from "../world/query";
+import { buildingById, grid, isExplored, nodeAt, placementProblem, workersAt } from "../world/query";
 import { nextPhase } from "../world/time";
 import { type Cause, inBounds, tileIndex, type UnitState } from "../world/types";
 import { Command, type CommandResult, PERMISSIONS, type Rejection } from "./schema";
@@ -64,7 +66,7 @@ export function submit(ctx: Ctx, raw: unknown, seq: number): CommandResult {
 }
 
 function unitFor(ctx: Ctx, id: string): UnitState {
-  return unitById(ctx.s, id) ?? refuse("INVALID_TARGET", `no unit ${id}`);
+  return findUnit(ctx.s, id) ?? refuse("INVALID_TARGET", `no unit ${id}`);
 }
 
 function tileFor(ctx: Ctx, [x, y]: [number, number]): number {
@@ -119,7 +121,7 @@ function execute(ctx: Ctx, cmd: Command, cause: Cause): void {
     case "unit.build": {
       const unit = unitFor(ctx, cmd.unit);
       controllable(unit);
-      const site = buildingById(ctx.s, cmd.site) ?? refuse("INVALID_TARGET", `no site ${cmd.site}`);
+      const site = findBuilding(ctx.s, cmd.site) ?? refuse("INVALID_TARGET", `no site ${cmd.site}`);
       if (site.complete) refuse("PRECONDITION_FAILED", `${site.id} is already built`);
       const path = pathFor(ctx, unit, tileIndex(ctx.s, site.x, site.y));
       setJob(unit, { kind: "build", site: site.id, stage: "to_site", cause });
@@ -150,18 +152,12 @@ function execute(ctx: Ctx, cmd: Command, cause: Cause): void {
       return;
     }
     case "build.place": {
-      const def =
-        ctx.ix.buildings.get(cmd.building) ?? refuse("INVALID_TARGET", `no building type ${cmd.building}`);
-      const tile = tileFor(ctx, cmd.at);
       const [x, y] = cmd.at;
-      if (!isExplored(ctx.s, x, y)) refuse("PRECONDITION_FAILED", "that tile has not been seen");
-      if (!ctx.ix.terrain[ctx.s.terrain[tile] ?? -1]?.buildable)
-        refuse("PRECONDITION_FAILED", "cannot build on this ground");
-      if (buildingAt(ctx.s, x, y)) refuse("PRECONDITION_FAILED", "something is already built here");
-      if ((nodeAt(ctx.s, tile)?.amount ?? 0) > 0) refuse("PRECONDITION_FAILED", "clear the tile first");
-      if (!takeStock(ctx.s, def.cost)) refuse("INSUFFICIENT_RESOURCE", "not enough materials");
-      const site = placeBuilding(ctx, def.id, x, y, false, null);
-      site.placedBy = emit(ctx, "site.placed", { building: site.id, type: def.id }, cause).id;
+      const problem = placementProblem(ctx, cmd.building, x, y);
+      if (problem) refuse(problem.code, problem.reason);
+      takeStock(ctx.s, lookup(ctx.ix.buildings, cmd.building, "building").cost);
+      const site = placeBuilding(ctx, cmd.building, x, y, false, null);
+      site.placedBy = emit(ctx, "site.placed", { building: site.id, type: cmd.building }, cause).id;
       return;
     }
   }

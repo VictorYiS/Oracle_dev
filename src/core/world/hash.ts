@@ -20,9 +20,14 @@ function fnv1a(text: string, seed: number): number {
   return h >>> 0;
 }
 
-export function hashState(s: WorldView): string {
-  const text = canonical(s);
+/** The fingerprint of any plain JSON value. */
+export function hashValue(value: unknown): string {
+  const text = canonical(value);
   const a = fnv1a(text, 0x811c9dc5).toString(16).padStart(8, "0");
   const b = fnv1a(text, 0x01234567).toString(16).padStart(8, "0");
   return a + b;
+}
+
+export function hashState(s: WorldView): string {
+  return hashValue(s);
 }

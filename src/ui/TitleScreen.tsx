@@ -61,7 +61,7 @@ export function TitleScreen(props: Props) {
       <div class="fog" aria-hidden="true" />
       <LanguageSwitch />
       <header class="masthead">
-        <p class="wordmark">ORACLE</p>
+        <p class="wordmark">{m.title.wordmark}</p>
         <h1 class="title">{text(pack, pack.manifest.title, lang)}</h1>
         {pack.manifest.tagline && <p class="tagline">{text(pack, pack.manifest.tagline, lang)}</p>}
         {props.importedFrom && <p class="muted">{fmt(m.title.imported, { name: props.importedFrom })}</p>}
