@@ -2,7 +2,7 @@
   "name": "oracle",
   "private": true,
   "version": "0.0.1",
-  "description": "Oracle — an agent-driven settlement & automation game where the AI is useful enough to make you stop seeing the world.",
+  "description": "Oracle — a narrative management game where the AI is useful enough to make you stop going to see for yourself.",
   "license": "MIT",
   "type": "module",
   "engines": {
@@ -21,10 +21,11 @@
     "check": "npm run typecheck && npm run lint && npm run test && npm run check:neutral && npm run check:copy && npm run validate",
     "smoke": "tsx tools/smoke.ts",
     "econ": "tsx tools/econ-sim/run.ts",
-    "e2e": "playwright test",
+    "e2e": "playwright test --grep-invert @perf --workers=2 && playwright test --grep @perf --workers=1 --output=test-results/perf",
     "check:copy": "tsx tools/check-ui-copy.ts",
     "determinism": "tsx tools/determinism.ts",
     "bench": "tsx tools/bench.ts",
+    "gallery": "tsx tools/gallery.ts",
     "predev": "tsx tools/bundle-packs.ts",
     "prebuild": "tsx tools/bundle-packs.ts",
     "prepreview": "tsx tools/bundle-packs.ts"

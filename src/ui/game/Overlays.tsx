@@ -1,69 +1,37 @@
-// The build menu, the save menu and the key help: small dialogs over the map.
+// Small dialogs over the street: the save menu, settings and the key help.
 import { useRef, useState } from "preact/hooks";
+import type { ComponentChildren } from "preact";
 import { SaveError } from "../../core/game/game";
 import { Session } from "../../app/session";
 import { useUi } from "../context";
 import type { Later, Messages } from "../i18n";
-import { amounts, nameOf, packText } from "./names";
 
-function Dialog(props: {
+export function Dialog(props: {
   title: string;
   onClose(): void;
   closeLabel: string;
-  children: preact.ComponentChildren;
+  children: ComponentChildren;
   testid: string;
+  class?: string;
 }) {
   return (
-    <div class="overlay" role="dialog" aria-modal="true" aria-label={props.title} data-testid={props.testid}>
+    <div
+      class={`overlay ${props.class ?? ""}`}
+      role="dialog"
+      aria-modal="true"
+      aria-label={props.title}
+      data-testid={props.testid}
+    >
       <div class="dialog">
         <header>
           <h2>{props.title}</h2>
-          <button type="button" onClick={props.onClose}>
+          <button type="button" data-testid={`${props.testid}-close`} onClick={props.onClose}>
             {props.closeLabel}
           </button>
         </header>
         {props.children}
       </div>
     </div>
-  );
-}
-
-export function BuildMenu(props: { session: Session; onPick(building: string): void; onClose(): void }) {
-  const { m, lang } = useUi();
-  const ix = props.session.game.ix;
-  const stock = props.session.world.stock;
-  return (
-    <Dialog
-      title={m.buildMenu.title}
-      onClose={props.onClose}
-      closeLabel={m.buildMenu.close}
-      testid="build-menu"
-    >
-      <ul class="build-list">
-        {ix.pack.buildings.map((b) => {
-          const affordable = Object.entries(b.cost).every(([res, n]) => (stock[res] ?? 0) >= n);
-          return (
-            <li key={b.id}>
-              <button
-                type="button"
-                data-testid={`build-${b.id}`}
-                disabled={!affordable}
-                onClick={() => props.onPick(b.id)}
-              >
-                <span class="glyph" style={{ color: b.color }}>
-                  {b.glyph}
-                </span>
-                <span class="name">{nameOf(ix, lang, b.id)}</span>
-                <span class="cost mono">{amounts(ix, lang, b.cost, m.listSeparator)}</span>
-                <span class="desc muted">
-                  {affordable ? packText(ix.pack, lang, b.description) : m.buildMenu.short}
-                </span>
-              </button>
-            </li>
-          );
-        })}
-      </ul>
-    </Dialog>
   );
 }
 
@@ -153,6 +121,28 @@ export function SaveMenu(props: { session: Session; onLoaded(session: Session): 
           </p>
         )}
       </div>
+    </Dialog>
+  );
+}
+
+export function SettingsDialog(props: {
+  reduceMotion: boolean;
+  setReduceMotion(on: boolean): void;
+  onClose(): void;
+}) {
+  const { m } = useUi();
+  return (
+    <Dialog title={m.settings.title} onClose={props.onClose} closeLabel={m.settings.close} testid="settings">
+      <label class="toggle">
+        <input
+          type="checkbox"
+          data-testid="reduce-motion"
+          checked={props.reduceMotion}
+          onChange={(e) => props.setReduceMotion((e.currentTarget as HTMLInputElement).checked)}
+        />
+        <span>{m.settings.reduceMotion}</span>
+      </label>
+      <p class="muted">{m.settings.reduceMotionHint}</p>
     </Dialog>
   );
 }

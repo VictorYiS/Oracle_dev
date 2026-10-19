@@ -33,3 +33,26 @@ never called two names. Add a row before introducing a new term.
 | 预演 | rehearsal | Forked simulation · 分叉模拟 |
 | 经阁 | the Scriptorium | Rule library · 规则库 |
 | 回形针当量 | paperclip equivalent | The Oracle's unit of value · 神谕的估价单位 |
+| 东堤 | the East Bank | The district of the first chapters · 序章所在的街区 |
+| 街道 / 河岸 / 对岸 | street / riverbank / far bank | Layers of the East Bank · 东堤的三层 |
+| 远城 | the city beyond | The distant skyline, always drawn by the Oracle · 远景，永远是神谕画的 |
+| 窗口 | the window | Where the Interpreter hears cases · 译者办案的地方 |
+| 访客 | visitor | — |
+| 案件 / 申请 | case / request | — |
+| 办事规程 | procedure | SOP · 标准办事规程 |
+| 文件 / 申请表 / 摘录 / 原件 | papers / application / extract / original | — |
+| 盖章 | stamp | — |
+| 接电申请 / 户籍登记 / 维修申请 | connection to the grid / registration / repair request | The three kinds of case · 三种案件 |
+| 登记处 / 供电局 / 工务处 | the Registry / the Power Bureau / the Works Office | The institutions; their records are their beliefs · 机构；记录就是机构的信念 |
+| 记录 | records | What the institutions have on file · 机构存档 |
+| 神谕建议 | the Oracle suggests / suggestion | — |
+| 采纳 | adopt | Acting on a suggestion · 照建议办 |
+| 待核事项 | pending checks | Adopted, not yet checked · 已采信、未核验 |
+| 神谕默认 | taken for granted | What a suggestion assumes · 建议所依赖的前提 |
+| 调阅原件 | read the original | — |
+| 记忆 | memory | What you saw, and when; it fades and never updates itself · 你看到的样子和日期，会褪色、不会自己更新 |
+| 看 ≠ 去 | looking is not going | — |
+| 通道 / 人行桥 / 巷子 / 台阶 / 门 | passage / footbridge / alley / steps / door | — |
+| 线路 / 容量 | line / capacity | The district's power line · 街区电力线路 |
+| 维修队 | crew | — |
+| 17乙 | 17B | An address not on the map · 地图上没有的地址 |

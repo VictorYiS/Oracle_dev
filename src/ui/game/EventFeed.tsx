@@ -1,50 +1,106 @@
+// The event feed: what the player can know. Changes nobody saw (someone moving out, a cable run in
+// the night) are in the log, but not here.
 import type { Session } from "../../app/session";
+import type { PackIndex } from "../../core/world/pack-index";
 import type { EventView } from "../../core/world/types";
-import { fmt, type Messages } from "../i18n";
 import { useUi } from "../context";
-import { nameOf, packText, unitLabel } from "./names";
+import { fmt, type Messages } from "../i18n";
+import { actionName, addressOf, caseName, packText, personName } from "./names";
 
-const SHOWN = 8;
+const SHOWN = 6;
+const FACTS = ["power", "damaged", "occupied"] as const;
 
-export function eventText(session: Session, m: Messages, lang: string, ev: EventView): string {
-  const ix = session.game.ix;
+function diffText(m: Messages, d: EventView["data"]): string {
+  return FACTS.filter((f) => d[`was_${f}`] !== d[`now_${f}`])
+    .map((f) =>
+      fmt(m.events.change, {
+        was: m.facts[f][d[`was_${f}`] ? "yes" : "no"],
+        now: m.facts[f][d[`now_${f}`] ? "yes" : "no"],
+      }),
+    )
+    .join(m.listSeparator);
+}
+
+/** The feed's wording for an event, or null if the player would not know of it. */
+export function eventText(ix: PackIndex, m: Messages, lang: string, ev: EventView): string | null {
   const d = ev.data;
-  if (ev.kind === "scenario") return packText(ix.pack, lang, String(d.message));
-  const template = (m.events as Record<string, string>)[ev.kind];
-  if (!template) return ev.kind;
-  const buildingType =
-    typeof d.type === "string" ? d.type : session.world.buildings.find((b) => b.id === d.building)?.type;
-  const unit = session.world.units.find((u) => u.id === d.unit);
-  const vars: Record<string, string | number> = {
-    building: buildingType ? nameOf(ix, lang, buildingType) : "",
-    resource: typeof d.resource === "string" ? nameOf(ix, lang, d.resource) : "",
-    node: typeof d.node === "string" ? nameOf(ix, lang, d.node) : "",
-    weather: typeof d.weather === "string" ? nameOf(ix, lang, d.weather) : "",
-    unit: unit ? unitLabel(ix, lang, unit) : typeof d.type === "string" ? nameOf(ix, lang, d.type) : "",
-    phase: typeof d.phase === "string" ? ((m.phases as Record<string, string>)[d.phase] ?? "") : "",
-    amount: Number(d.amount ?? 0),
-    day: Number(d.day ?? ev.day),
-    fed: Number(d.fed ?? 0),
-    hungry: Number(d.hungry ?? 0),
-    days: Number(d.days ?? 0),
-  };
-  return fmt(template, vars);
+  const str = (k: string) => (typeof d[k] === "string" ? (d[k] as string) : "");
+  const address = () => addressOf(ix, lang, str("building"));
+  const name = () => personName(ix, lang, str("applicant"));
+  const e = m.events;
+  switch (ev.kind) {
+    case "world.created":
+      return e["world.created"];
+    case "scenario":
+      return packText(ix.pack, lang, str("message"));
+    case "case.arrived":
+      return fmt(e["case.arrived"], { name: name(), case: caseName(ix, lang, str("type")) });
+    case "case.decided":
+      return fmt(d.via === "oracle" ? e["case.decidedOracle"] : e["case.decided"], {
+        case: caseName(ix, lang, str("type")),
+        address: address(),
+        action: actionName(ix, lang, str("type"), d.action === "approve" ? "approve" : "deny"),
+      });
+    case "case.expired":
+      return fmt(e["case.expired"], { name: name() });
+    case "order.done": {
+      const key =
+        d.kind === "connect"
+          ? d.found === "already"
+            ? "order.already"
+            : "order.connected"
+          : d.found === "nothing"
+            ? "order.nothing"
+            : "order.repaired";
+      return fmt(e[key], { address: address(), name: name() });
+    }
+    case "order.failed": {
+      const key =
+        d.reason === "damaged"
+          ? "order.damaged"
+          : d.reason === "overload"
+            ? "order.overload"
+            : "order.missing";
+      return fmt(e[key], { address: address() });
+    }
+    case "memory.seen":
+      return d.unknown
+        ? fmt(e["memory.unknown"], { address: address() })
+        : fmt(e["memory.seen"], { address: address(), diff: diffText(m, d) });
+    case "memory.changed": {
+      const days = Number(d.days ?? 0);
+      const when = days === 0 ? e.today : days === 1 ? e.yesterday : fmt(e.daysAgo, { n: days });
+      return fmt(e["memory.changed"], { address: address(), when, diff: diffText(m, d) });
+    }
+    case "pending.checked":
+      return fmt(d.verdict === "right" ? e["pending.right"] : e["pending.wrong"], { address: address() });
+    case "day.settled":
+      return fmt(e["day.settled"], {
+        day: Number(d.day),
+        decided: Number(d.decided),
+        expired: Number(d.expired),
+      });
+    default:
+      return null;
+  }
 }
 
 export function EventFeed(props: { session: Session }) {
   const { m, lang } = useUi();
+  const ix = props.session.game.ix;
   // Newest first, scanning back from the end: the log can hold thousands of events.
   const log = props.session.game.events;
-  const events: EventView[] = [];
-  for (let i = log.length - 1; i >= 0 && events.length < SHOWN; i--) {
-    if (log[i]!.kind !== "phase.changed") events.push(log[i]!);
+  const shown: { ev: EventView; text: string }[] = [];
+  for (let i = log.length - 1; i >= 0 && shown.length < SHOWN; i--) {
+    const text = eventText(ix, m, lang, log[i]!);
+    if (text) shown.push({ ev: log[i]!, text });
   }
   return (
     <section class="feed" aria-label={m.hud.events} aria-live="polite" data-testid="events">
       <ol>
-        {events.map((e) => (
-          <li key={e.id} data-kind={e.kind}>
-            <span class="mono muted">{e.day}</span> {eventText(props.session, m, lang, e)}
+        {shown.map(({ ev, text }) => (
+          <li key={ev.id} data-kind={ev.kind} data-event={ev.id}>
+            <span class="mono muted">{ev.day}</span> {text}
           </li>
         ))}
       </ol>

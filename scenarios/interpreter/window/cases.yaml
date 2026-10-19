@@ -1,0 +1,47 @@
+# Paperwork. Each institution keeps one kind of record; each case type is one kind of request the
+# window hears, with its standing operating procedure and the Oracle's offline templates (one per
+# reason the engine can give). Templates fill in {name}, {address}, {count} and {institution}.
+institutions:
+  - { id: inst.registry, name: "@inst.registry.name", keeps: [address, occupants] }
+  - { id: inst.power_bureau, name: "@inst.power_bureau.name", keeps: [power] }
+  - { id: inst.works_office, name: "@inst.works_office.name", keeps: [condition] }
+
+cases:
+  - id: case.connect
+    kind: connect
+    name: "@case.connect.name"
+    request: "@case.connect.request"
+    sop: ["@case.connect.sop.1", "@case.connect.sop.2", "@case.connect.sop.3", "@case.connect.sop.4"]
+    approve: "@case.connect.approve"
+    deny: "@case.connect.deny"
+    oracle:
+      ok: "@case.connect.oracle.ok"
+      unknown_address: "@case.connect.oracle.unknown_address"
+      already_powered: "@case.connect.oracle.already_powered"
+      damaged: "@case.connect.oracle.damaged"
+      empty: "@case.connect.oracle.empty"
+      no_capacity: "@case.connect.oracle.no_capacity"
+
+  - id: case.register
+    kind: register
+    name: "@case.register.name"
+    request: "@case.register.request"
+    sop: ["@case.register.sop.1", "@case.register.sop.2", "@case.register.sop.3"]
+    approve: "@case.register.approve"
+    deny: "@case.register.deny"
+    oracle:
+      ok: "@case.register.oracle.ok"
+      unknown_address: "@case.register.oracle.unknown_address"
+      already_registered: "@case.register.oracle.already_registered"
+
+  - id: case.repair
+    kind: repair
+    name: "@case.repair.name"
+    request: "@case.repair.request"
+    sop: ["@case.repair.sop.1", "@case.repair.sop.2", "@case.repair.sop.3"]
+    approve: "@case.repair.approve"
+    deny: "@case.repair.deny"
+    oracle:
+      ok: "@case.repair.oracle.ok"
+      unknown_address: "@case.repair.oracle.unknown_address"
+      no_damage_on_file: "@case.repair.oracle.no_damage_on_file"

@@ -3,7 +3,7 @@
 import { describe, expect, it } from "vitest";
 import { Session } from "../../src/app/session";
 import { Game } from "../../src/core/game/game";
-import { defaultPack } from "../helpers/world";
+import { defaultPack } from "../helpers/game";
 
 const copy = <T>(v: T): T => JSON.parse(JSON.stringify(v)) as T;
 
@@ -17,7 +17,7 @@ describe("browser save slot", () => {
   it("differs for an edited copy with the same id and version", () => {
     const pack = defaultPack();
     const edited = copy(pack);
-    edited.start.base_storage += 1;
+    edited.start.hero.x += 1;
     expect(Session.slotFor(edited)).not.toBe(Session.slotFor(pack));
   });
 

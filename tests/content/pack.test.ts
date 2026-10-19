@@ -128,28 +128,30 @@ describe("extends", () => {
 
   it("reports references left dangling by a removal", () => {
     const result = assemblePack(
-      child({ files: [{ path: "x.yaml", data: { remove: { resources: ["res.paperclip"] } } }] }),
+      child({ files: [{ path: "x.yaml", data: { remove: { buildings: ["bld.eb_02"] } } }] }),
       resolve,
     );
     expect(result.ok).toBe(false);
-    expect(result.issues.some((i) => i.message === 'unknown resources "res.paperclip"')).toBe(true);
+    // Two people live there: their homes now point nowhere.
+    expect(
+      result.issues.filter((i) => i.message === 'unknown buildings "bld.eb_02"').map((i) => i.path),
+    ).toEqual(["person.mara.home", "person.ivo.home"]);
   });
 
-  it("overrides the map wholesale and checks the start still fits", () => {
-    const rows = Array.from({ length: 10 }, () => ".".repeat(10));
+  it("overrides the start wholesale and checks it still fits the places", () => {
     const result = assemblePack(
       child({
         files: [
           {
-            path: "world/map.yaml",
-            data: { map: { width: 10, height: 10, legend: { ".": { terrain: "terrain.grass" } }, rows } },
+            path: "world/start.yaml",
+            data: { start: { hero: { layer: "layer.street", x: 99_999, look: { coat: "#112233" } } } },
           },
         ],
       }),
       resolve,
     );
     expect(result.ok).toBe(false);
-    expect(result.issues.some((i) => i.message.includes("is not a walkable tile"))).toBe(true);
+    expect(result.issues.some((i) => i.path === "hero.layer" && i.message.includes("outside"))).toBe(true);
   });
 
   it("reports an unknown parent", () => {

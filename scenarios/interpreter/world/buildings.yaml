@@ -1,72 +1,181 @@
+# Every building: where its lot is, how it is drawn, what it draws from the line, how it really is
+# (truth) and what the institutions have on file (record). Record fields left out agree with the
+# truth. A few deliberately do not: that is where the town's cases come from.
 buildings:
-  - id: bld.campfire
-    name: "@bld.campfire.name"
-    description: "@bld.campfire.desc"
-    cost: { res.wood: 5 }
-    build_ticks: 30
-    depot: true
-    sight: 3
-    glyph: "▲"
-    color: "#d6a35a"
-  - id: bld.warehouse
-    name: "@bld.warehouse.name"
-    description: "@bld.warehouse.desc"
-    cost: { res.wood: 10 }
-    build_ticks: 90
-    depot: true
-    storage: 100
-    glyph: "▣"
-    color: "#a88b63"
-  - id: bld.house
-    name: "@bld.house.name"
-    description: "@bld.house.desc"
-    cost: { res.wood: 15, res.stone: 5 }
-    build_ticks: 150
-    housing: 2
-    glyph: "⌂"
-    color: "#c2a27a"
-  - id: bld.farm
-    name: "@bld.farm.name"
-    description: "@bld.farm.desc"
-    cost: { res.wood: 8 }
-    build_ticks: 60
-    workers: 2
-    produces: { res.berry: 4 }
-    glyph: "≡"
-    color: "#8fae5b"
-  - id: bld.well
-    name: "@bld.well.name"
-    description: "@bld.well.desc"
-    cost: { res.wood: 2, res.stone: 6 }
-    build_ticks: 80
-    workers: 1
-    produces: { res.water: 6 }
-    glyph: "◎"
-    color: "#7fb3c9"
-  - id: bld.workshop
-    name: "@bld.workshop.name"
-    description: "@bld.workshop.desc"
-    cost: { res.wood: 12, res.stone: 8 }
-    build_ticks: 120
-    workers: 1
-    produces: { res.parts: 2 }
-    consumes: { res.wood: 2, res.stone: 1 }
-    glyph: "⚒"
-    color: "#b08d57"
-  - id: bld.lookout
-    name: "@bld.lookout.name"
-    description: "@bld.lookout.desc"
-    cost: { res.wood: 10, res.stone: 4 }
-    build_ticks: 100
-    sight: 8
-    glyph: "♜"
-    color: "#d8d2c4"
-  - id: bld.windmill
-    name: "@bld.windmill.name"
-    description: "@bld.windmill.desc"
-    cost: { res.wood: 12, res.parts: 4 }
-    build_ticks: 140
-    workers: 1
-    produces: { res.power: 5 }
-    glyph: "✣"
-    color: "#c9c3a5"
+  # ---- the street ---------------------------------------------------------------------------
+  - id: bld.registry
+    address: "@bld.registry.address"
+    layer: layer.street
+    x: -180
+    width: 300
+    depth: 140
+    look: { landmark: landmark.registry }
+    load: 3
+    truth: { power: true, damaged: false }
+
+  # ---- the riverbank, down the steps --------------------------------------------------------
+  - id: bld.boathouse
+    address: "@bld.boathouse.address"
+    layer: layer.riverbank
+    x: 180
+    width: 260
+    look: { recipe: recipe.works, seed: 3311, style: style.works }
+    load: 1
+    truth: { power: true, damaged: false }
+  - id: bld.pump_house
+    address: "@bld.pump_house.address"
+    layer: layer.riverbank
+    x: 2040
+    width: 180
+    look: { recipe: recipe.stack, seed: 902, style: style.shanty }
+    load: 2
+    truth: { power: true, damaged: false }
+
+  # ---- the far bank, across the bridge -------------------------------------------------------
+  - id: bld.eb_01
+    address: "@bld.eb_01.address"
+    layer: layer.far_bank
+    x: -560
+    width: 230
+    look: { recipe: recipe.row_house, seed: 1101 }
+    load: 2
+    truth: { power: true, damaged: false }
+  - id: bld.eb_02
+    address: "@bld.eb_02.address"
+    layer: layer.far_bank
+    x: -320
+    width: 210
+    look: { recipe: recipe.row_house, seed: 1202 }
+    load: 2
+    truth: { power: true, damaged: false }
+  - id: bld.eb_03
+    address: "@bld.eb_03.address"
+    layer: layer.far_bank
+    x: -100
+    width: 240
+    look: { recipe: recipe.row_house, seed: 1303 }
+    load: 2
+    truth: { power: true, damaged: false }
+  # Pavel is still registered here; nobody has lived here since the spring.
+  - id: bld.eb_04
+    address: "@bld.eb_04.address"
+    layer: layer.far_bank
+    x: 150
+    width: 200
+    look: { recipe: recipe.row_house, seed: 1404 }
+    load: 2
+    truth: { power: false, damaged: false }
+  - id: bld.eb_05
+    address: "@bld.eb_05.address"
+    layer: layer.far_bank
+    x: 360
+    width: 220
+    look: { recipe: recipe.row_house, seed: 1505 }
+    load: 2
+    truth: { power: false, damaged: false }
+  # On file: closed and cut off. In fact the lights are on and someone keeps the books by them.
+  - id: bld.counting_house
+    address: "@bld.counting_house.address"
+    layer: layer.far_bank
+    x: 600
+    width: 300
+    depth: 170
+    look: { landmark: landmark.counting_house }
+    load: 3
+    truth: { power: true, damaged: false }
+    record: { power: false }
+  - id: bld.eb_06
+    address: "@bld.eb_06.address"
+    layer: layer.far_bank
+    x: 920
+    width: 210
+    look: { recipe: recipe.row_house, seed: 1606 }
+    load: 2
+    truth: { power: true, damaged: false }
+  # On file: connected. In fact the line to it was cut weeks ago.
+  - id: bld.eb_07
+    address: "@bld.eb_07.address"
+    layer: layer.far_bank
+    x: 1140
+    width: 230
+    look: { recipe: recipe.row_house, seed: 1707 }
+    load: 2
+    truth: { power: false, damaged: false }
+    record: { power: true }
+  - id: bld.eb_08
+    address: "@bld.eb_08.address"
+    layer: layer.far_bank
+    x: 1390
+    width: 230
+    look: { recipe: recipe.row_house, seed: 1808 }
+    load: 2
+    truth: { power: true, damaged: false }
+  - id: bld.eb_09
+    address: "@bld.eb_09.address"
+    layer: layer.far_bank
+    x: 1640
+    width: 220
+    look: { recipe: recipe.row_house, seed: 1909 }
+    load: 2
+    truth: { power: true, damaged: false }
+  - id: bld.eb_10
+    address: "@bld.eb_10.address"
+    layer: layer.far_bank
+    x: 1880
+    width: 220
+    look: { recipe: recipe.row_house, seed: 2010 }
+    load: 2
+    truth: { power: true, damaged: false }
+  # Not on the registry's map: built by hand, lived in by candlelight.
+  - id: bld.eb_17b
+    address: "@bld.eb_17b.address"
+    layer: layer.far_bank
+    x: 2120
+    width: 200
+    look:
+      {
+        recipe: recipe.stack,
+        seed: 1717,
+        style: style.shanty,
+        parts: [part.laundry, part.wires, part.posters],
+      }
+    load: 1
+    truth: { power: false, damaged: false }
+    record: { known: false, power: false }
+  - id: bld.eb_11
+    address: "@bld.eb_11.address"
+    layer: layer.far_bank
+    x: 2340
+    width: 190
+    depth: 344
+    look: { recipe: recipe.row_house, seed: 2111 }
+    load: 2
+    truth: { power: true, damaged: false }
+  # (the alley runs between 11 and the first works hall)
+  - id: bld.works_1
+    address: "@bld.works_1.address"
+    layer: layer.far_bank
+    x: 2700
+    width: 320
+    depth: 344
+    look: { recipe: recipe.works, seed: 3101, style: style.works }
+    load: 4
+    truth: { power: true, damaged: false }
+  # The roof came in during the last storm. Nobody reported it.
+  - id: bld.eb_12
+    address: "@bld.eb_12.address"
+    layer: layer.far_bank
+    x: 3040
+    width: 210
+    look: { recipe: recipe.row_house, seed: 2212 }
+    load: 2
+    truth: { power: true, damaged: true }
+    record: { damaged: false }
+  - id: bld.works_2
+    address: "@bld.works_2.address"
+    layer: layer.far_bank
+    x: 3270
+    width: 340
+    look: { recipe: recipe.works, seed: 3202, style: style.works }
+    load: 4
+    truth: { power: true, damaged: false }

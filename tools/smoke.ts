@@ -1,7 +1,9 @@
 // npm run smoke — every pack (and the test fixture packs) runs 30 game days of the real world
-// simulation under the scripted bot without crashing, and its economy runs 30 days for every
+// simulation under the scripted bot without crashing, and prints the final hash with residents,
+// powered buildings, open cases and pending checks; its economy sandbox (P0) runs 30 days for every
 // strategy without NaN or negative debt.
 import { Game } from "../src/core/game/game";
+import { openCases } from "../src/core/world/query";
 import type { Pack } from "../src/core/content/pack";
 import { allIn, moderate, zeroOracle } from "./econ-sim/bots";
 import { DEFAULT_SANDBOX, runGame } from "./econ-sim/model";
@@ -15,12 +17,12 @@ function world(id: string, pack: Pack): void {
     const game = Game.create(pack, 1);
     playBot(game, 30);
     const w = game.world;
-    const food = Object.entries(w.stock)
-      .filter(([res]) => pack.resources.find((r) => r.id === res)?.tags.includes("food"))
-      .reduce((sum, [, n]) => sum + n, 0);
-    const people = w.units.filter((u) => u.role !== "worker").length;
+    const residents = w.residents.filter((r) => r.here).length;
+    const powered = w.buildings.filter((b) => b.power).length;
+    const open = openCases(w).length;
+    const pending = w.pending.items.filter((p) => p.verdict === null).length;
     console.log(
-      `✓ ${id}: world 30 days · hash ${game.hash()} · population ${people} · food ${food} · buildings ${w.buildings.filter((b) => b.complete).length}`,
+      `✓ ${id}: world 30 days · hash ${game.hash()} · residents ${residents} · powered buildings ${powered} · open cases ${open} · pending checks ${pending}`,
     );
   } catch (e) {
     failures++;

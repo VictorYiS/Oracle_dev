@@ -3,17 +3,17 @@
 // Enforced by eslint.config.js and tests/architecture/write-boundary.test.ts.
 import { Rng } from "../random/prng";
 import type { Ctx } from "./ctx";
-import { lookup } from "./pack-index";
-import { capacity, stored } from "./query";
-import {
-  type BuildingState,
-  type Cause,
-  inBounds,
-  type Job,
-  tileIndex,
-  type UnitState,
-  type WorldEvent,
-  type WorldState,
+import type { Facts } from "./facts";
+import type { BuildingRecord, ResidentRecord } from "./records";
+import type {
+  BuildingState,
+  CaseState,
+  Cause,
+  MemoryEntry,
+  PendingItem,
+  ResidentState,
+  WorldEvent,
+  WorldState,
 } from "./types";
 
 export type { Ctx };
@@ -31,13 +31,6 @@ export function emit(ctx: Ctx, kind: string, data: WorldEvent["data"], cause: Ca
   return event;
 }
 
-/** Like emit, but at most once per day for this kind. */
-export function notice(ctx: Ctx, kind: string, data: WorldEvent["data"], cause: Cause): void {
-  if (ctx.s.noticed[kind] === ctx.s.clock.day) return;
-  ctx.s.noticed[kind] = ctx.s.clock.day;
-  emit(ctx, kind, data, cause);
-}
-
 export function withRng<T>(s: WorldState, fn: (rng: Rng) => T): T {
   const rng = Rng.fromState(s.rng);
   const result = fn(rng);
@@ -49,172 +42,101 @@ export function bumpVersion(s: WorldState): void {
   s.version++;
 }
 
-// ---- stock ------------------------------------------------------------------------------------
-
-export { capacity, stored };
-
-// ---- finding things to change ------------------------------------------------------------------
-
-/** A unit to change. Read-only code uses unitById in ./query instead. */
-export function findUnit(s: WorldState, id: string): UnitState | undefined {
-  return s.units.find((u) => u.id === id);
+export function newId(s: WorldState, prefix: string): string {
+  return `${prefix}${s.nextId++}`;
 }
 
-/** A building or site to change. Read-only code uses buildingById in ./query instead. */
+// ---- finding things to change ------------------------------------------------------------------
+// Read-only code uses the matching functions in ./query instead.
+
 export function findBuilding(s: WorldState, id: string): BuildingState | undefined {
   return s.buildings.find((b) => b.id === id);
 }
 
-/** Add up to `amount`, limited by free capacity. Returns what was actually added. */
-export function addStock(ctx: Ctx, resource: string, amount: number): number {
-  const added = Math.max(0, Math.min(amount, capacity(ctx) - stored(ctx.s)));
-  if (added > 0) ctx.s.stock[resource] = (ctx.s.stock[resource] ?? 0) + added;
+export function findResident(s: WorldState, id: string): ResidentState | undefined {
+  return s.residents.find((r) => r.id === id);
+}
+
+export function findCase(s: WorldState, id: string): CaseState | undefined {
+  return s.cases.find((c) => c.id === id);
+}
+
+export function findPending(s: WorldState, id: number): PendingItem | undefined {
+  return s.pending.items.find((p) => p.id === id);
+}
+
+export function findRecord(s: WorldState, id: string): BuildingRecord | undefined {
+  return s.records.buildings.find((b) => b.id === id);
+}
+
+export function findResidentRecord(s: WorldState, id: string): ResidentRecord | undefined {
+  return s.records.residents.find((r) => r.id === id);
+}
+
+// ---- records -----------------------------------------------------------------------------------
+
+/** Change a building's entry on file; stamps the day if anything changed. */
+export function setRecord(
+  s: WorldState,
+  id: string,
+  patch: Partial<Pick<BuildingRecord, "known" | "power" | "damaged">>,
+): void {
+  const r = findRecord(s, id);
+  if (!r) return;
+  let changed = false;
+  for (const key of ["known", "power", "damaged"] as const) {
+    const value = patch[key];
+    if (value !== undefined && r[key] !== value) {
+      r[key] = value;
+      changed = true;
+    }
+  }
+  if (changed) r.updated = s.clock.day;
+}
+
+export function setRegistration(s: WorldState, person: string, building: string | null): void {
+  const r = findResidentRecord(s, person);
+  if (!r || r.registered === building) return;
+  r.registered = building;
+  r.updated = s.clock.day;
+}
+
+// ---- memory -------------------------------------------------------------------------------------
+
+/** Record what the player sees at a building today. Kept sorted by building. */
+export function remember(s: WorldState, building: string, facts: Facts): void {
+  const entry: MemoryEntry = {
+    building,
+    day: s.clock.day,
+    power: facts.power,
+    damaged: facts.damaged,
+    occupied: facts.occupied,
+  };
+  const i = s.memory.findIndex((m) => m.building >= building);
+  if (i >= 0 && s.memory[i]!.building === building) s.memory[i] = entry;
+  else if (i >= 0) s.memory.splice(i, 0, entry);
+  else s.memory.push(entry);
+}
+
+// ---- the pending tray ----------------------------------------------------------------------------
+
+export function addPending(s: WorldState, item: Omit<PendingItem, "id">): PendingItem {
+  const added: PendingItem = { id: s.pending.next++, ...item };
+  s.pending.items.push(added);
   return added;
 }
 
-export function hasStock(s: WorldState, amounts: Record<string, number>): boolean {
-  return Object.entries(amounts).every(([res, n]) => (s.stock[res] ?? 0) >= n);
-}
-
-/** Take all of `amounts` or nothing. */
-export function takeStock(s: WorldState, amounts: Record<string, number>): boolean {
-  if (!hasStock(s, amounts)) return false;
-  for (const [res, n] of Object.entries(amounts)) {
-    s.stock[res] = (s.stock[res] ?? 0) - n;
-    if (s.stock[res] === 0) delete s.stock[res];
-  }
-  return true;
-}
-
-/** Remove up to `amount` of one resource (events may take what is there). */
-export function drainStock(s: WorldState, resource: string, amount: number): number {
-  const taken = Math.min(amount, s.stock[resource] ?? 0);
-  if (taken > 0) {
-    s.stock[resource] = (s.stock[resource] ?? 0) - taken;
-    if (s.stock[resource] === 0) delete s.stock[resource];
-  }
-  return taken;
-}
-
-// ---- units ------------------------------------------------------------------------------------
-
-export function spawnUnit(ctx: Ctx, type: string, x: number, y: number): UnitState {
-  const def = lookup(ctx.ix.units, type, "unit type");
-  const unit: UnitState = {
-    id: `u${ctx.s.nextId++}`,
-    type,
-    role: def.role,
-    x,
-    y,
-    carrying: null,
-    job: null,
-    path: [],
-    step: 0,
-    work: 0,
-    disabledDays: 0,
-    hunger: 0,
-    workplace: null,
-  };
-  ctx.s.units.push(unit);
-  reveal(ctx, x, y, sightOf(ctx, unit));
-  return unit;
-}
-
-export function removeUnit(s: WorldState, id: string): void {
-  s.units = s.units.filter((u) => u.id !== id);
-}
-
-export function setJob(unit: UnitState, job: Job | null): void {
-  unit.job = job;
-  unit.path = [];
-  unit.step = 0;
-  unit.work = 0;
-}
-
-export function setPath(unit: UnitState, path: number[]): void {
-  unit.path = path;
-  unit.step = 0;
-}
-
-export function moveUnit(ctx: Ctx, unit: UnitState, tile: number): void {
-  unit.x = tile % ctx.s.width;
-  unit.y = Math.floor(tile / ctx.s.width);
-  reveal(ctx, unit.x, unit.y, sightOf(ctx, unit));
-}
-
-export function setWorkplace(unit: UnitState, building: string | null): void {
-  unit.workplace = building;
-}
-
-// ---- buildings ----------------------------------------------------------------------------------
-
-export function placeBuilding(
-  ctx: Ctx,
-  type: string,
-  x: number,
-  y: number,
-  complete: boolean,
-  placedBy: number | null,
-): BuildingState {
-  const building: BuildingState = {
-    id: `b${ctx.s.nextId++}`,
-    type,
-    x,
-    y,
-    complete,
-    progress: complete ? lookup(ctx.ix.buildings, type, "building").build_ticks : 0,
-    placedBy,
-  };
-  ctx.s.buildings.push(building);
-  if (complete) revealFromBuilding(ctx, building);
-  return building;
-}
-
-export function completeBuilding(ctx: Ctx, building: BuildingState): void {
-  building.complete = true;
-  building.progress = lookup(ctx.ix.buildings, building.type, "building").build_ticks;
-  revealFromBuilding(ctx, building);
-}
-
-// ---- nodes, weather, fog -----------------------------------------------------------------------
-
-export function setNodeAmount(s: WorldState, tile: number, amount: number): void {
-  const node = s.nodes.find((n) => n.tile === tile);
-  if (node) node.amount = Math.max(0, amount);
-}
-
-export function setWeather(s: WorldState, weather: string): void {
-  s.weather = weather;
+export function settlePending(
+  s: WorldState,
+  item: PendingItem,
+  right: boolean,
+  how: "sight" | "original",
+): void {
+  item.verdict = right ? "right" : "wrong";
+  item.how = how;
+  item.checked = s.clock.day;
 }
 
 export function markFired(s: WorldState, eventId: string): void {
   s.fired[eventId] = s.clock.day;
-}
-
-/** Sight radius after the weather, never below 1. */
-export function sightOf(ctx: Ctx, unit: UnitState): number {
-  const base = lookup(ctx.ix.units, unit.type, "unit type").sight;
-  const delta = ctx.ix.weathers.get(ctx.s.weather)?.sight_delta ?? 0;
-  return Math.max(1, base + delta);
-}
-
-function revealFromBuilding(ctx: Ctx, b: BuildingState): void {
-  const sight = lookup(ctx.ix.buildings, b.type, "building").sight;
-  reveal(ctx, b.x, b.y, Math.max(1, sight));
-}
-
-/** Mark every tile within `radius` (Euclidean) of (x, y) as explored. */
-export function reveal(ctx: Ctx, x: number, y: number, radius: number): void {
-  const r2 = radius * radius;
-  for (let dy = -radius; dy <= radius; dy++) {
-    for (let dx = -radius; dx <= radius; dx++) {
-      if (dx * dx + dy * dy > r2 || !inBounds(ctx.s, x + dx, y + dy)) continue;
-      ctx.s.explored[tileIndex(ctx.s, x + dx, y + dy)] = 1;
-    }
-  }
-}
-
-export function revealAll(ctx: Ctx): void {
-  for (const u of ctx.s.units) reveal(ctx, u.x, u.y, sightOf(ctx, u));
-  for (const b of ctx.s.buildings) if (b.complete) revealFromBuilding(ctx, b);
 }

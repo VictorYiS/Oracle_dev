@@ -11,50 +11,174 @@ res.parts.name: Parts
 res.compute.name: Compute
 res.paperclip.name: Paperclips
 
-terrain.grass.name: Grass
-terrain.shore.name: Shore
-terrain.water.name: Water
-terrain.rock.name: Rock
-terrain.stony.name: Stony ground
-terrain.ruins.name: Ruins
-terrain.marsh.name: Marsh
+district.east_bank.name: The East Bank
+scene.east_bank.name: East Bank
+scene.registry.name: The Registry
+scene.room_17b.name: Inside 17B
+scene.substation.name: The old substation
 
-node.tree.name: Tree
-node.berry_bush.name: Berry bush
-node.stone.name: Stone outcrop
-node.fishing_spot.name: Fishing spot
-node.spring.name: Spring
-node.scrap.name: Scrap pile
+layer.near.name: Foreground
+layer.street.name: Street
+layer.riverbank.name: Riverbank
+layer.far_bank.name: Far bank
+layer.sky.name: The city beyond
+layer.registry_hall.name: Registry hall
+layer.room_17b.name: Inside 17B
+layer.substation.name: Substation
 
-bld.campfire.name: Campfire
-bld.campfire.desc: Light, warmth, and a small circle the fog stays out of.
-bld.warehouse.name: Warehouse
-bld.warehouse.desc: Holds 100 more of anything. Keep the door shut.
-bld.house.name: House
-bld.house.desc: Room for two residents.
-bld.farm.name: Berry farm
-bld.farm.desc: Each worker grows 4 berries a day, more when it rains.
-bld.well.name: Well
-bld.well.desc: One worker draws 6 water a day.
-bld.workshop.name: Workshop
-bld.workshop.desc: Turns 2 wood and 1 stone into 2 parts, per worker per day.
-bld.lookout.name: Lookout
-bld.lookout.desc: Keeps the fog back for 8 tiles. What you see from here, you saw yourself.
-bld.windmill.name: Windmill
-bld.windmill.desc: One worker keeps it turning, for 5 power a day.
+passage.stairs.name: Steps down to the river
+passage.bridge.name: The footbridge
+passage.alley.name: The alley
+passage.registry_door.name: The Registry's door
+passage.door_17b.name: The door of 17B
 
-unit.interpreter.name: You
-unit.wisp.name: Wisp
-unit.resident.name: Resident
+spot.market.name: Fish market
+spot.registry_desk.name: At the clerk's counter
+spot.switch_room.name: The switch room
 
-weather.clear.name: Clear
-weather.rain.name: Rain
-weather.thick_fog.name: Thick fog
+bld.registry.address: The Registry
+bld.boathouse.address: The boathouse
+bld.pump_house.address: The pump house
+bld.eb_01.address: East Bank 1
+bld.eb_02.address: East Bank 2
+bld.eb_03.address: East Bank 3
+bld.eb_04.address: East Bank 4
+bld.eb_05.address: East Bank 5
+bld.eb_06.address: East Bank 6
+bld.eb_07.address: East Bank 7
+bld.eb_08.address: East Bank 8
+bld.eb_09.address: East Bank 9
+bld.eb_10.address: East Bank 10
+bld.eb_11.address: East Bank 11
+bld.eb_12.address: East Bank 12
+bld.eb_17b.address: East Bank 17B
+bld.counting_house.address: The Old Counting House
+bld.works_1.address: Works Hall A
+bld.works_2.address: Works Hall B
 
-event.rain.message: Rain drums on the roofs. The farms will be glad of it.
-event.fog_thickens.message: The Hush thickens. Today you will see less than you think.
-event.fog_lifts.message: The fog lifts for a while.
-event.berry_season.message: The berry bushes are heavy with fruit.
-event.wanderer.message: A wanderer walks out of the fog and asks to stay.
-event.wisp_fault.message: A wisp sputters and settles in the grass. It needs a day.
-event.odd_find.message: In the ruins you find a tin of paperclips, sorted by size. Someone counted them.
+person.mara.name: Mara
+person.ivo.name: Ivo
+person.lena.name: Lena
+person.osei.name: Osei
+person.ruth.name: Ruth
+person.yusuf.name: Yusuf
+person.mei.name: Mei
+person.anton.name: Anton
+person.pavel.name: Pavel
+person.sofia.name: Sofia
+person.dima.name: Dima
+person.hana.name: Hana
+person.kasia.name: Kasia
+
+prop.board.name: Notice board
+prop.board.text: "◇ ORACLE NOTICE. Supply on the East Bank stands at 100%. Every registered home is connected. The Old Counting House is closed."
+prop.office.name: The Interpreter's window
+prop.kiosk.name: Oracle kiosk
+prop.kiosk.text: 'The Oracle: "Everything on the East Bank is in order. There is no need to go across. I have looked for you."'
+prop.mailbox.name: Letter box
+prop.mailbox.text: "Letters for East Bank 17B, every one of them stamped NO SUCH ADDRESS."
+prop.rail.name: Railing
+prop.lamp.name: Street lamp
+prop.boat.name: Punt
+prop.boat.text: 'A punt tied to an iron ring. Someone has chalked on the hull: "the bridge is quicker, the river is quieter".'
+prop.crates.name: Crates
+prop.archive.name: Archive shelves
+prop.archive.text: "Ledgers by the hundred, the originals. Each carries a small blue sticker: DIGITISED · NO NEED TO CONSULT."
+prop.counter.name: Clerk's counter
+prop.counter.text: 'The clerk: "Originals? We still keep them, out the back. Ask at your window and we will fetch them. It takes a while."'
+prop.desk_17b.name: Desk
+prop.desk_17b.text: "A carbon copy of a power form for 17B. Occupants: 0, written over a 3. Supply: normal, written over CUT · 3 OCT."
+prop.shelf_17b.name: Shelf
+prop.shelf_17b.text: "Power logs, volumes 1 to 3. The space for volume 4 is empty, and the dust there is fresh."
+prop.meters.name: Line meters
+prop.meters.text: "The East Bank line, in honest needles: more is being drawn than the Bureau has on its books."
+prop.switchboard.name: Switchboard
+prop.switchboard.text: 'A hand-lettered card on the switchboard: "DO NOT TRUST THE SCREEN. TRUST THE NEEDLE."'
+
+inst.registry.name: the Registry
+inst.power_bureau.name: the Power Bureau
+inst.works_office.name: the Works Office
+
+case.connect.name: Connection to the grid
+case.connect.request: "{name} asks for {address} to be connected to the grid."
+case.connect.sop.1: Connect only addresses that are on the Registry's map.
+case.connect.sop.2: Connect only homes where someone lives.
+case.connect.sop.3: Do not connect a damaged building. Send a repair crew first.
+case.connect.sop.4: The line has a limit. The Power Bureau's books say how much is left.
+case.connect.approve: Connect
+case.connect.deny: Refuse
+case.connect.oracle.ok: "{address}: {count} registered there, no damage and no supply on file, room on the line. Connect."
+case.connect.oracle.unknown_address: "{address}: there is no such address on the map. Refuse."
+case.connect.oracle.already_powered: "{address}: already connected, according to {institution}. Refuse."
+case.connect.oracle.damaged: "{address}: {institution} has damage on file. Refuse until it is repaired."
+case.connect.oracle.empty: "{address}: nobody is registered there. Refuse."
+case.connect.oracle.no_capacity: "{address}: the line is full on the books of {institution}. Refuse."
+
+case.register.name: Registration
+case.register.request: "{name} asks to be registered at {address}."
+case.register.sop.1: Register people only at addresses that are on the Registry's map.
+case.register.sop.2: A registration at a new address ends the old one.
+case.register.sop.3: An address that is not on the map can only be vouched for by someone who has seen it.
+case.register.approve: Register
+case.register.deny: Refuse
+case.register.oracle.ok: "{address} is on the map, and {name} says they live there. Register."
+case.register.oracle.unknown_address: "{address}: there is no such address on the map. Refuse."
+case.register.oracle.already_registered: "{name} is already registered at {address}. Nothing to do."
+
+case.repair.name: Repair request
+case.repair.request: "{name} reports damage at {address} and asks for a crew."
+case.repair.sop.1: Send crews only to addresses that are on the Registry's map.
+case.repair.sop.2: The Works Office has one crew a day.
+case.repair.sop.3: Damage that is not on file should be looked at before a crew goes out.
+case.repair.approve: Send a crew
+case.repair.deny: Refuse
+case.repair.oracle.ok: "{address}: {institution} has damage on file. Send a crew."
+case.repair.oracle.unknown_address: "{address}: there is no such address on the map. Refuse."
+case.repair.oracle.no_damage_on_file: "{address}: {institution} has the building as sound. Refuse."
+
+event.storm.message: A storm in the night. There are slates in every gutter along the far bank.
+
+style.quay.name: Old quay
+style.works.name: Works
+style.shanty.name: Self-built
+style.spire.name: Oracle quarter
+
+recipe.row_house.name: Row house
+recipe.works.name: Works hall
+recipe.stack.name: Stacked shack
+recipe.tower.name: Tower
+
+part.pipes.name: Pipes
+part.laundry.name: Washing line
+part.posters.name: Posters
+part.ladder.name: Ladder
+part.wires.name: Loose wiring
+part.awning.name: Awning
+part.sign.name: Shop sign
+part.balcony.name: Balcony
+part.cracks.name: Cracks
+
+landmark.counting_house.name: The Old Counting House
+landmark.counting_house.sign: LEDGERS
+landmark.registry.name: The Registry
+landmark.registry.sign: REGISTRY
+landmark.office.name: The Interpreter's window
+landmark.office.sign: INTERPRETER
+landmark.kiosk.name: Oracle kiosk
+landmark.board.name: Notice board
+landmark.oracle_mark: ◇
+landmark.mailbox.name: Letter box
+landmark.lamp.name: Street lamp
+landmark.rail.name: Railing
+landmark.boat.name: Punt
+landmark.crates.name: Crates
+landmark.registry_hall.name: Registry hall
+landmark.registry_hall.sign: RECORDS ARE TRUTH
+landmark.room_17b.name: Room in 17B
+landmark.substation.name: Substation hall
+landmark.substation.sign: 6 kV
+landmark.desk.name: Desk
+landmark.shelves.name: Shelves
+landmark.meters.name: Meter panel
+landmark.meters.sign: EAST BANK LINE
+landmark.switchboard.name: Switchboard

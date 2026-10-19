@@ -58,6 +58,18 @@ export class Session {
     return result;
   }
 
+  /** Commands from the debug hook (tests, curious players): logged and replayed like any other. */
+  submitDebug(command: Record<string, unknown>): CommandResult {
+    const result = this.game.submit({ ...command, source: "debug" });
+    this.changed();
+    return result;
+  }
+
+  /** How far the clock is into the next tick (0–1), so walkers can be drawn between ticks. */
+  get frac(): number {
+    return this.world.clock.phase === "day" && this.speed > 0 ? this.carry : 0;
+  }
+
   setSpeed(speed: Speed): void {
     this.speed = speed;
     this.carry = 0;
@@ -118,9 +130,11 @@ export class Session {
     return JSON.stringify(this.game.toSave());
   }
 
-  /** Throws SaveError when the save does not fit this pack or this version. */
+  /** Throws SaveError when the save does not fit this pack or this version. Starts paused. */
   static fromSave(pack: Pack, save: unknown): Session {
-    return new Session(pack, Game.fromSave(pack, save));
+    const session = new Session(pack, Game.fromSave(pack, save));
+    session.speed = 0;
+    return session;
   }
 
   static async fromBrowser(pack: Pack): Promise<Session | null> {

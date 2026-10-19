@@ -1,0 +1,231 @@
+/* The paper theatre. Stage units: 720 tall; the frame is scaled to fit its host. */
+.pt-host {
+  position: relative;
+  overflow: hidden;
+  background: #0d0c0b;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
+}
+.pt-frame {
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform-origin: 0 0;
+  overflow: hidden;
+}
+.pt-viewport {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background: linear-gradient(#1c2233 0%, #333d57 28%, #7d7d78 55%, #c4b08a 70%, #d6c6a0 100%);
+}
+.pt-world {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 0;
+  height: 0;
+  transform-style: preserve-3d;
+}
+.pt-layer {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 0;
+  height: 0;
+}
+.pt-layer,
+.pt-plane {
+  transition:
+    opacity 0.3s ease,
+    visibility 0s linear 0s;
+}
+.pt-off {
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity 0.25s ease,
+    visibility 0s linear 0.25s;
+}
+.pt-gone {
+  opacity: 0 !important;
+  visibility: hidden !important;
+  transition: none !important;
+}
+.pt-plane {
+  position: absolute;
+  transform-origin: 0 0;
+}
+.pt-obj {
+  position: absolute;
+}
+.pt-obj svg,
+.pt-plane svg {
+  display: block;
+  overflow: visible;
+}
+.pt-face {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+}
+.pt-plane > .pt-face {
+  top: 0;
+}
+[data-look],
+.pt-hot,
+[data-prop] {
+  cursor: pointer;
+}
+.pt-hot {
+  position: absolute;
+}
+[data-ground] {
+  cursor: crosshair;
+}
+.pt-near {
+  pointer-events: none;
+  opacity: 0.92;
+}
+
+/* The ground, drawn in perspective by the browser. */
+.pt-pavement {
+  background:
+    repeating-linear-gradient(90deg, rgba(29, 25, 22, 0.16) 0 1.5px, transparent 1.5px 92px),
+    repeating-linear-gradient(0deg, rgba(29, 25, 22, 0.12) 0 1.5px, transparent 1.5px 46px),
+    linear-gradient(#a99a7c, #bcae90);
+  border-bottom: 4px solid #1d1916;
+}
+.pt-water {
+  background:
+    repeating-linear-gradient(0deg, rgba(205, 214, 218, 0.16) 0 1.2px, transparent 1.2px 34px),
+    linear-gradient(#56646d, #36424c);
+}
+.pt-quay {
+  background:
+    repeating-linear-gradient(90deg, rgba(29, 25, 22, 0.14) 0 1.5px, transparent 1.5px 80px),
+    repeating-linear-gradient(0deg, rgba(29, 25, 22, 0.1) 0 1.5px, transparent 1.5px 40px),
+    linear-gradient(#a59a82, #988c74);
+  border-top: 3px solid #1d1916;
+}
+.pt-floor {
+  background: #55473a;
+}
+.pt-deck {
+  background: repeating-linear-gradient(0deg, #8a7458 0 15px, #1d1916 15px 16.5px);
+  border-left: 3px solid #1d1916;
+  border-right: 3px solid #1d1916;
+}
+.pt-steps {
+  background: repeating-linear-gradient(0deg, #9a8e76 0 22px, #1d1916 22px 25px, #7c705a 25px 30px);
+  border-left: 3px solid #1d1916;
+  border-right: 3px solid #1d1916;
+}
+.pt-alley-floor {
+  background:
+    repeating-linear-gradient(90deg, rgba(0, 0, 0, 0.25) 0 1.5px, transparent 1.5px 22px),
+    repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.2) 0 1.5px, transparent 1.5px 18px),
+    linear-gradient(#6d6355, #3c362f);
+}
+.pt-alley-end {
+  background:
+    repeating-linear-gradient(0deg, transparent 0 27px, #1d191626 27px 29px),
+    linear-gradient(#1d191640, #1d191670), var(--wall-paper);
+  border: 2px solid #1d1916;
+  box-sizing: border-box;
+}
+.pt-alley-exit {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  width: 76px;
+  height: 182px;
+  transform: translateX(-50%);
+  background: linear-gradient(90deg, #1a1817, #35312a);
+  border: 5px solid #a59880;
+  border-bottom: 0;
+  box-sizing: border-box;
+}
+.pt-haze {
+  background: linear-gradient(rgba(161, 149, 127, 0), #a1957f 90px);
+  pointer-events: none;
+}
+.pt-fog {
+  background: linear-gradient(rgba(170, 160, 138, 0), rgba(170, 160, 138, 0.75));
+  pointer-events: none;
+}
+
+/* Memory: the longer since you looked, the more it fades toward old paper. */
+.pt-bld[data-age="1"] .pt-face[data-style="ink"],
+.pt-side[data-age="1"] .pt-face[data-style="ink"] {
+  filter: saturate(0.72);
+}
+.pt-bld[data-age="2"] .pt-face[data-style="ink"],
+.pt-side[data-age="2"] .pt-face[data-style="ink"] {
+  filter: sepia(0.38) saturate(0.55) brightness(1.05);
+}
+.pt-bld[data-age="3"] .pt-face[data-style="ink"],
+.pt-side[data-age="3"] .pt-face[data-style="ink"] {
+  filter: sepia(0.62) saturate(0.42) brightness(1.1) contrast(0.85);
+}
+.candle {
+  animation: pt-flick 1.4s infinite;
+}
+@keyframes pt-flick {
+  0% {
+    opacity: 0.6;
+  }
+  25% {
+    opacity: 1;
+  }
+  45% {
+    opacity: 0.72;
+  }
+  70% {
+    opacity: 0.95;
+  }
+  100% {
+    opacity: 0.65;
+  }
+}
+.pt-figure {
+  pointer-events: none;
+}
+.pt-flip,
+.pt-flip > * {
+  transform-origin: 50% 100%;
+}
+.pt-walk .pt-flip > * {
+  animation: pt-bob 0.3s ease-in-out infinite alternate;
+}
+@keyframes pt-bob {
+  from {
+    transform: translateY(0) rotate(-2deg);
+  }
+  to {
+    transform: translateY(-4px) rotate(2deg);
+  }
+}
+
+/* Reduced motion: nothing moves by itself. */
+.pt-reduce *,
+.pt-reduce {
+  transition: none !important;
+  animation: none !important;
+}
+.pt-defs {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+}
+.pt-bitmap {
+  display: flex;
+}
+.pt-bitmap canvas {
+  flex: none;
+}
+.pt-culled {
+  visibility: hidden !important;
+}

@@ -1,0 +1,107 @@
+# Street furniture and fittings. Each is drawn from a landmark (hand-written part data), centred on
+# its x and standing on the ground. Props with text say something when you use them.
+props:
+  # ---- the street ---------------------------------------------------------------------------
+  - {
+      id: prop.board,
+      name: "@prop.board.name",
+      layer: layer.street,
+      x: 560,
+      landmark: landmark.board,
+      text: "@prop.board.text",
+    }
+  - { id: prop.office, name: "@prop.office.name", layer: layer.street, x: 700, landmark: landmark.office }
+  - {
+      id: prop.kiosk,
+      name: "@prop.kiosk.name",
+      layer: layer.street,
+      x: 1060,
+      landmark: landmark.kiosk,
+      text: "@prop.kiosk.text",
+    }
+  - {
+      id: prop.mailbox,
+      name: "@prop.mailbox.name",
+      layer: layer.street,
+      x: 2300,
+      landmark: landmark.mailbox,
+      text: "@prop.mailbox.text",
+    }
+
+  # ---- the foreground: lamps and the railing you look over ----------------------------------
+  - { id: prop.rail, name: "@prop.rail.name", layer: layer.near, x: 1800, landmark: landmark.rail }
+  - { id: prop.lamp_1, name: "@prop.lamp.name", layer: layer.near, x: -300, landmark: landmark.lamp }
+  - { id: prop.lamp_2, name: "@prop.lamp.name", layer: layer.near, x: 300, landmark: landmark.lamp }
+  - { id: prop.lamp_3, name: "@prop.lamp.name", layer: layer.near, x: 900, landmark: landmark.lamp }
+  - { id: prop.lamp_4, name: "@prop.lamp.name", layer: layer.near, x: 1500, landmark: landmark.lamp }
+  - { id: prop.lamp_5, name: "@prop.lamp.name", layer: layer.near, x: 2100, landmark: landmark.lamp }
+  - { id: prop.lamp_6, name: "@prop.lamp.name", layer: layer.near, x: 2700, landmark: landmark.lamp }
+  - { id: prop.lamp_7, name: "@prop.lamp.name", layer: layer.near, x: 3300, landmark: landmark.lamp }
+
+  # ---- the riverbank -------------------------------------------------------------------------
+  - {
+      id: prop.boat,
+      name: "@prop.boat.name",
+      layer: layer.riverbank,
+      x: 760,
+      y: 18,
+      landmark: landmark.boat,
+      text: "@prop.boat.text",
+    }
+  - { id: prop.crates, name: "@prop.crates.name", layer: layer.riverbank, x: 2500, landmark: landmark.crates }
+
+  # ---- inside the registry --------------------------------------------------------------------
+  - {
+      id: prop.archive,
+      name: "@prop.archive.name",
+      layer: layer.registry_hall,
+      x: -380,
+      landmark: landmark.shelves,
+      inspect: true,
+      text: "@prop.archive.text",
+    }
+  - {
+      id: prop.counter,
+      name: "@prop.counter.name",
+      layer: layer.registry_hall,
+      x: 300,
+      landmark: landmark.desk,
+      text: "@prop.counter.text",
+    }
+
+  # ---- inside 17B ------------------------------------------------------------------------------
+  - {
+      id: prop.desk_17b,
+      name: "@prop.desk_17b.name",
+      layer: layer.room_17b,
+      x: 330,
+      landmark: landmark.desk,
+      text: "@prop.desk_17b.text",
+    }
+  - {
+      id: prop.shelf_17b,
+      name: "@prop.shelf_17b.name",
+      layer: layer.room_17b,
+      x: -360,
+      landmark: landmark.shelves,
+      inspect: true,
+      text: "@prop.shelf_17b.text",
+    }
+
+  # ---- inside the substation -------------------------------------------------------------------
+  - {
+      id: prop.meters,
+      name: "@prop.meters.name",
+      layer: layer.substation,
+      x: 220,
+      landmark: landmark.meters,
+      text: "@prop.meters.text",
+    }
+  - {
+      id: prop.switchboard,
+      name: "@prop.switchboard.name",
+      layer: layer.substation,
+      x: -320,
+      landmark: landmark.switchboard,
+      text: "@prop.switchboard.text",
+    }
