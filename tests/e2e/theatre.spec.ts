@@ -114,9 +114,23 @@ test.describe("the paper theatre", () => {
     };
     await go(true);
     const depths: number[] = [];
+    const projections: number[] = [];
+    const sampleProjection = () =>
+      facade(page, "bld.eb_08").evaluate((el) => {
+        const view = document.querySelector("#viewport")!;
+        const cam = new DOMMatrixReadOnly(getComputedStyle(document.querySelector(".pt-world")!).transform);
+        const layer = new DOMMatrixReadOnly(getComputedStyle(el.closest("[data-layer]")!).transform);
+        const perspective = parseFloat(getComputedStyle(view).perspective);
+        const stageScale = view.getBoundingClientRect().height / parseFloat(getComputedStyle(view).height);
+        const expected =
+          (parseFloat((el as HTMLElement).style.height) * stageScale * perspective) /
+          (perspective - layer.m43 - cam.m43);
+        return el.getBoundingClientRect().height / expected;
+      });
     await expect(viewport(page)).toHaveAttribute("data-busy", "1");
     for (let i = 0; i < 80 && (await viewport(page).getAttribute("data-busy")) === "1"; i++) {
       depths.push(await heroZ(page));
+      projections.push(await sampleProjection());
       await page.waitForTimeout(40);
     }
     expect(
@@ -124,6 +138,14 @@ test.describe("the paper theatre", () => {
       `hero depths: ${depths}`,
     ).toBe(true);
     await expect(viewport(page)).toHaveAttribute("data-at", "layer.far_bank");
+    await settled(page);
+    projections.push(await sampleProjection());
+    await page.waitForTimeout(150);
+    projections.push(await sampleProjection());
+    expect(projections.length).toBeGreaterThan(5);
+    for (const ratio of projections) {
+      expect(ratio, "building dimensions follow perspective throughout and after crossing").toBeCloseTo(1, 2);
+    }
     expect((await world(page)).hero.layer).toBe("layer.far_bank");
     expect(
       await facade(page, "bld.eb_17b").evaluate((el) => el.getBoundingClientRect().height),
@@ -150,6 +172,12 @@ test.describe("the paper theatre", () => {
     await settled(page);
     await walkTo(page, 2220);
     await cameraOnHero(page);
+    const doorHeight = (await page.locator('.pt-door[data-passage="passage.door_17b"]').boundingBox())!
+      .height;
+    const personHeight = (await page.getByTestId("hero").boundingBox())!.height;
+    expect(doorHeight / personHeight, "door has headroom for the person on the same layer").toBeGreaterThan(
+      1.1,
+    );
     await go(true);
     await expect(viewport(page)).toHaveAttribute("data-at", "layer.room_17b");
     await settled(page);

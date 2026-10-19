@@ -1,5 +1,5 @@
 import { test } from "@playwright/test";
-import { cross, goToFarBank, newGame, startDay, walkTo, cameraOnHero } from "./helpers";
+import { cross, newGame, startDay, walkTo, cameraOnHero } from "./helpers";
 test("shots", async ({ page }, info) => {
   test.setTimeout(120_000);
   const p = info.project.name;
@@ -20,7 +20,13 @@ test("shots", async ({ page }, info) => {
   await page.waitForTimeout(200);
   await page.screenshot({ path: info.outputPath(`${p}-tray.png`) });
   await page.getByTestId("pending-toggle").click();
-  await goToFarBank(page);
+  await walkTo(page, 2900);
+  await cross(page, "passage.stairs");
+  await walkTo(page, 2220);
+  await cameraOnHero(page);
+  await page.screenshot({ path: info.outputPath(`${p}-riverbank.png`) });
+  await walkTo(page, 1500);
+  await cross(page, "passage.bridge");
   await walkTo(page, 1255);
   await cameraOnHero(page);
   await page.waitForTimeout(1000);

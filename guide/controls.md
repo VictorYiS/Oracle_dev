@@ -22,7 +22,7 @@ Walking takes game time, and so does every passage: the steps down to the river,
 
 ## Looking is not going
 
-The street is a paper theatre: cards standing at different depths. Distant buildings grow as you approach their layer; rooms use a closer view that follows you.
+The street is a paper theatre: cards standing at different depths. Buildings keep their physical dimensions and grow continuously in perspective as the camera approaches; rooms use a closer view that follows you.
 
 - Stand beside a bookcase in the registry or 17B. **Wheel up** or **F** inspects it. **You stay where you are.**
 - **Wheel down** or **Esc** returns to the character. **↑ / ↓** also leaves inspection before you can travel.

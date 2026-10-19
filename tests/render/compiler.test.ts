@@ -5,6 +5,7 @@
 import { describe, expect, it } from "vitest";
 import type { Pack } from "../../src/core/content/pack";
 import { drawFacade, drawSide, resolve, type VisualContent, type VisualIR } from "../../src/render/compiler";
+import { FIGURE_H, OUTDOOR_X } from "../../src/render/geometry";
 import { defaultPack } from "../helpers/game";
 
 const pack: Pack = defaultPack();
@@ -34,6 +35,19 @@ const STATES = ["powered", "dark", "damaged", "candle", "empty"] as const;
 const CLUTTER = ["part.laundry", "part.wires", "part.posters", "part.cracks"];
 
 describe("the visual compiler", () => {
+  it("gives every town entrance room for a person, with consistent building proportions", () => {
+    for (const b of pack.buildings) {
+      const form =
+        "landmark" in b.look
+          ? resolve(content, { kind: "landmark", landmark: b.look.landmark, seed: 42 })
+          : resolve(content, ir(b.look.recipe, b.look.seed, { lot: b.width * OUTDOOR_X }));
+      const scale = form.grammar === "landmark" ? (b.width * OUTDOOR_X) / form.width : 1;
+      expect(form.doorH * scale, `${b.id}: door headroom`).toBeGreaterThanOrEqual(FIGURE_H * 1.1);
+      expect(form.doorW * scale, `${b.id}: door width`).toBeGreaterThanOrEqual(64);
+      expect(form.height * scale, `${b.id}: building height`).toBeGreaterThan(FIGURE_H * 2.5);
+    }
+  });
+
   it("gives byte-identical SVG for the same IR, state and look", () => {
     for (const recipe of pack.recipes) {
       for (const state of STATES) {

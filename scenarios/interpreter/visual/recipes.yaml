@@ -5,9 +5,9 @@ recipes:
     name: "@recipe.row_house.name"
     grammar: terrace
     floors: [2, 4]
-    bay_width: [52, 70]
-    floor_height: [70, 84]
-    base: [16, 26]
+    bay_width: [104, 140]
+    floor_height: [225, 265]
+    base: [24, 34]
     roofs: [flat, gable, sawtooth, mansard, dome]
     windows: [rect, arch, tall]
     chimneys: [0, 2]
@@ -16,17 +16,17 @@ recipes:
     name: "@recipe.works.name"
     grammar: hall
     floors: [1, 2]
-    bay_width: [44, 58]
-    floor_height: [96, 126]
+    bay_width: [104, 140]
+    floor_height: [235, 280]
     roofs: [sawtooth, barrel, flat]
     stacks: [1, 2]
-    stack_height: [110, 210]
+    stack_height: [190, 320]
 
   - id: recipe.stack
     name: "@recipe.stack.name"
     grammar: stack
     boxes: [2, 4]
-    box_height: [58, 88]
+    box_height: [245, 290]
     lean: 18
     windows: [1, 2]
 

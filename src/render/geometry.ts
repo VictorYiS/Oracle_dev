@@ -2,10 +2,15 @@
 // 720 units tall and as wide as the screen's shape allows; it is scaled to fit.
 
 /** Perspective distance (CSS `perspective`). */
-export const PERSPECTIVE = 900;
+export const PERSPECTIVE = 1200;
 export const STAGE_H = 720;
 /** Where the eye is, vertically. */
-export const EYE_Y = 300;
+export const EYE_Y = 380;
+/** Outdoor map coordinates are denser than human-sized drawings. */
+export const OUTDOOR_X = 2;
+export const OUTDOOR_ZOOM = 1.2;
+export const INTERIOR_ZOOM = 1.65;
+export const FIGURE_H = 150;
 /** The ground line of every walkable layer. */
 export const GROUND = 600;
 /** The far skyline stands on a lower line, so it sits on the horizon. */

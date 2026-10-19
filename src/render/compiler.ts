@@ -74,6 +74,8 @@ interface Base {
   height: number;
   doorX: number | null;
   doorH: number;
+  doorW: number;
+  doorBottom: number;
   /** Where the side faces attach: the main body's left and right edge, and its top. */
   body: { x0: number; x1: number; top: number };
 }
@@ -147,6 +149,8 @@ export function resolve(content: VisualContent, ir: VisualIR): Form {
       height: lm.height,
       doorX: door ? door[0] + door[2] / 2 : null,
       doorH: door ? door[3] : 0,
+      doorW: door ? door[2] : 0,
+      doorBottom: door ? lm.height - door[1] - door[3] : 0,
       body: { x0: body[0], x1: body[1], top: body[2] },
     };
   }
@@ -208,6 +212,8 @@ export function resolve(content: VisualContent, ir: VisualIR): Form {
         height: H,
         doorX,
         doorH: floorH * 0.78,
+        doorW: Math.min(span * 0.6, Math.max(70, bayW * 0.5)),
+        doorBottom: 0,
         body: { x0: margin, x1: W - margin, top: H - bodyH },
       };
     }
@@ -241,6 +247,7 @@ export function resolve(content: VisualContent, ir: VisualIR): Form {
         stacks,
         stackH,
         doorW,
+        doorBottom: 0,
         height: H,
         doorX,
         doorH: floorH * 0.82,
@@ -272,6 +279,8 @@ export function resolve(content: VisualContent, ir: VisualIR): Form {
         height: H,
         doorX: W / 2 + b0.dx,
         doorH: b0.h * 0.72,
+        doorW: Math.min(b0.w * 0.6, 74),
+        doorBottom: 0,
         body: { x0: W / 2 + b0.dx - b0.w / 2, x1: W / 2 + b0.dx + b0.w / 2, top: H - b0.h },
       };
     }
@@ -295,6 +304,8 @@ export function resolve(content: VisualContent, ir: VisualIR): Form {
         height: H,
         doorX: null,
         doorH: 0,
+        doorW: 0,
+        doorBottom: 0,
         body: { x0: margin, x1: W - margin, top: crownH + 10 },
       };
     }
@@ -574,7 +585,7 @@ function terrace(f: Terrace, state: VisualState, c: Pen): string {
   }
   o += `<path d="${c.L(x0, yB - f.base, x1, yB - f.base)}"/>`;
   const doorX = f.doorX ?? x0 + f.bayW / 2;
-  const dw = f.bayW * 0.42;
+  const dw = f.doorW;
   const dh = f.doorH;
   let broken = state === "damaged";
   const candleAt = f.floors > 1 ? f.bays : 0;
@@ -785,11 +796,11 @@ function stack(f: Stack, state: VisualState, c: Pen): string {
     o += hatch(c, pts, bx1 - b.w * 0.22, by0, b.w * 0.22 + 2, b.h);
     o += `<path d="${c.L(bx0 - 5, by0, bx1 + 5, by0)}" stroke-width="${c.ink ? 3.2 : 1.4}"/>`;
     for (let k = 0; k < b.wins; k++) {
-      const ww = 20;
-      const wh = 22;
+      const ww = Math.min(44, (b.w / (b.wins + 1)) * 0.42);
+      const wh = b.h * 0.34;
       const wx = bx0 + (b.w / (b.wins + 1)) * (k + 1) - ww / 2;
-      const wy = by0 + b.h * 0.25;
-      if (i === 0 && Math.abs(wx + ww / 2 - (cx + b.dx)) < 26) continue;
+      const wy = by0 + b.h * 0.18;
+      if (i === 0 && Math.abs(wx + ww / 2 - (cx + b.dx)) < (ww + f.doorW) / 2 + 4) continue;
       const kind = candleWindow(state, c, index++, 0) ?? litKind(c, state, rw);
       o += drawWin(c, winPts(wx, wy, ww, wh, "rect"), { x: wx, y: wy, w: ww, h: wh }, kind);
     }
@@ -797,10 +808,10 @@ function stack(f: Stack, state: VisualState, c: Pen): string {
       const doorX = cx + b.dx;
       const doorH = b.h * 0.72;
       o += `<path d="${c.P([
-        [doorX - 13, y],
-        [doorX - 13, y - doorH],
-        [doorX + 13, y - doorH],
-        [doorX + 13, y],
+        [doorX - f.doorW / 2, y],
+        [doorX - f.doorW / 2, y - doorH],
+        [doorX + f.doorW / 2, y - doorH],
+        [doorX + f.doorW / 2, y],
       ])}" fill="${oFill(c, "#2f2b27", "#dbe7ff")}"/>`;
       if (c.ink && state === "damaged")
         o += `<path d="${c.L(doorX - 16, y - doorH * 0.7, doorX + 16, y - doorH * 0.35)}" stroke-width="5" stroke="#5b4a3a"/>`;
@@ -1069,9 +1080,13 @@ export function drawSide(
   o += `<rect x="0" y="0" width="${f1(depth)}" height="7" fill="${oFill(c, f.palette.roof, "#eef4ff")}" stroke="none"/>`;
   if (depth >= 80) {
     let index = 0;
-    for (let y = 30; y < H - 70; y += 78) {
-      const ww = 16;
-      const wh = 26;
+    const floors =
+      f.grammar === "terrace" || f.grammar === "hall" ? f.floors : Math.max(1, Math.floor(H / 160));
+    const floorH = f.grammar === "terrace" || f.grammar === "hall" ? f.floorH : H / floors;
+    for (let floor = 0; floor < floors; floor++) {
+      const ww = Math.min(44, depth * 0.22);
+      const wh = floorH * 0.42;
+      const y = H - (floor + 1) * floorH + floorH * 0.2;
       const wx = depth * 0.35;
       const kind = candleWindow(state, c, index++, 99) ?? litKind(c, state, rw, 0.4);
       o += drawWin(c, winPts(wx, y, ww, wh, "rect"), { x: wx, y, w: ww, h: wh }, kind);

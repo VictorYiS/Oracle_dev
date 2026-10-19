@@ -27,7 +27,11 @@ import {
   camText,
   EYE_Y,
   EASE,
+  FIGURE_H,
   GROUND,
+  INTERIOR_ZOOM,
+  OUTDOOR_X,
+  OUTDOOR_ZOOM,
   PERSPECTIVE,
   type Cam,
   type Shot,
@@ -64,6 +68,7 @@ interface Face {
 interface BuildingView {
   def: Building;
   form: Form;
+  scale: number;
   card: Face;
   sides: (Face & { side: "left" | "right"; depth: number })[];
   key: string;
@@ -268,10 +273,20 @@ export class Theatre {
       recipe: b.look.recipe,
       style: b.look.style ?? district?.style ?? "",
       seed: b.look.seed,
-      lot: b.width,
-      door: door ? door.from.x - b.x : null,
+      lot: b.width * this.units(b.layer),
+      door: door ? (door.from.x - b.x) * this.units(b.layer) : null,
       parts: b.look.parts,
     };
+  }
+
+  /** Convert map coordinates consistently for scenery, people, passages and the camera. */
+  private units(layer: string): number {
+    const scene = this.ix.layers.get(layer)!.scene;
+    return this.ix.scenes.get(scene)!.kind === "outdoor" ? OUTDOOR_X : 1;
+  }
+
+  private stageX(layer: string, x: number): number {
+    return (this.anchors.get(layer) ?? 0) + x * this.units(layer);
   }
 
   private build(): void {
@@ -280,7 +295,8 @@ export class Theatre {
     for (const p of ix.pack.passages) {
       const to = ix.layers.get(p.to.layer);
       const scene = to ? ix.scenes.get(to.scene) : undefined;
-      if (scene?.kind === "interior") this.anchors.set(to!.id, p.from.x - p.to.x);
+      if (scene?.kind === "interior")
+        this.anchors.set(to!.id, this.stageX(p.from.layer, p.from.x) - p.to.x * this.units(to!.id));
     }
     for (const layer of [...ix.layers.values()].sort((a, b) => a.depth - b.depth)) {
       const el = document.createElement("div");
@@ -292,7 +308,8 @@ export class Theatre {
       this.group(layer.id, el);
     }
     for (const scene of ix.pack.scenes) {
-      const [left, right] = scene.extent;
+      const unit = scene.kind === "outdoor" ? OUTDOOR_X : 1;
+      const [left, right] = scene.extent.map((x) => x * unit) as [number, number];
       if (scene.kind === "interior") {
         const layer = ix.sceneLayers.get(scene.id)?.[0];
         const lm = scene.backdrop ? ix.landmarks.get(scene.backdrop) : undefined;
@@ -351,7 +368,7 @@ export class Theatre {
       if (!lm) continue;
       const el = this.card(
         prop.layer,
-        prop.x - lm.width / 2,
+        prop.x * this.units(prop.layer) - lm.width / 2,
         GROUND - lm.height + prop.y,
         lm.width,
         lm.height,
@@ -361,8 +378,8 @@ export class Theatre {
         this.cullable.push({
           els: [el],
           depth: ix.layers.get(prop.layer)?.depth ?? 0,
-          x0: prop.x - lm.width / 2,
-          x1: prop.x + lm.width / 2,
+          x0: prop.x * this.units(prop.layer) - lm.width / 2,
+          x1: prop.x * this.units(prop.layer) + lm.width / 2,
           out: false,
         });
       const layer = ix.layers.get(prop.layer);
@@ -381,13 +398,18 @@ export class Theatre {
 
   private buildBuilding(b: Building): void {
     const form = resolve(this.content, this.irFor(b));
-    const top = GROUND - form.height;
-    const el = this.card(b.layer, b.x, top, form.width, form.height, "pt-bld");
+    const scale = "landmark" in b.look ? (b.width * this.units(b.layer)) / form.width : 1;
+    const x = b.x * this.units(b.layer);
+    const top = GROUND - form.height * scale;
+    const el = this.card(b.layer, x, top, form.width * scale, form.height * scale, "pt-bld");
     el.dataset.building = b.id;
     el.dataset.look = b.layer;
-    el.dataset.x = String(Math.round(b.x + form.width / 2));
+    el.dataset.x = String(Math.round(b.x + b.width / 2));
+    el.dataset.doorHeight = String(form.doorH * scale);
     const face = document.createElement("div");
     face.className = "pt-face";
+    face.style.transformOrigin = "0 100%";
+    face.style.transform = `scale(${scale})`;
     el.appendChild(face);
     const door = this.ix.pack.passages.find(
       (p) => p.kind === "door" && p.from.layer === b.layer && p.from.x >= b.x && p.from.x <= b.x + b.width,
@@ -397,7 +419,7 @@ export class Theatre {
       hot.className = "pt-hot pt-door";
       hot.dataset.passage = door.id;
       hot.dataset.x = String(door.from.x);
-      hot.style.cssText = `left:${f1(form.doorX - 22)}px;top:${f1(form.height - Math.max(40, form.doorH))}px;width:44px;height:${f1(Math.max(40, form.doorH))}px`;
+      hot.style.cssText = `left:${f1((form.doorX - form.doorW / 2) * scale)}px;top:${f1((form.height - form.doorH - form.doorBottom) * scale)}px;width:${f1(form.doorW * scale)}px;height:${f1(form.doorH * scale)}px`;
       el.appendChild(hot);
     }
     const layer = this.ix.layers.get(b.layer)!;
@@ -411,23 +433,25 @@ export class Theatre {
     const wallH = form.height - form.body.top;
     const sides: BuildingView["sides"] = [];
     for (const side of ["left", "right"] as const) {
-      const sx = b.x + (side === "left" ? form.body.x0 : form.body.x1);
-      const w = this.wall(b.layer, sx, GROUND - wallH, wallH, layer.depth, depth, "pt-side");
+      const sx = x + (side === "left" ? form.body.x0 : form.body.x1) * scale;
+      const w = this.wall(b.layer, sx, GROUND - wallH * scale, wallH * scale, layer.depth, depth, "pt-side");
       w.dataset.face = side;
       w.dataset.building = b.id;
       w.dataset.look = b.layer;
-      w.dataset.x = String(Math.round(b.x + form.width / 2));
+      w.dataset.x = String(Math.round(b.x + b.width / 2));
       const f = document.createElement("div");
       f.className = "pt-face";
+      f.style.transformOrigin = "0 0";
+      f.style.transform = `scale(${scale})`;
       w.appendChild(f);
       sides.push({ el: w, face: f, side, depth });
     }
-    this.buildings.set(b.id, { def: b, form, card: { el, face }, sides, key: "", attrs: "" });
+    this.buildings.set(b.id, { def: b, form, scale, card: { el, face }, sides, key: "", attrs: "" });
     this.cullable.push({
       els: [el, ...sides.map((s) => s.el)],
       depth: layer.depth,
-      x0: b.x - 40,
-      x1: b.x + form.width + 40,
+      x0: x - 40,
+      x1: x + form.width * scale + 40,
       out: false,
     });
   }
@@ -442,10 +466,11 @@ export class Theatre {
     const nearEnd = near === from ? p.from : p.to;
     const farEnd = near === from ? p.to : p.from;
     if (p.kind === "bridge" || p.kind === "stairs") {
-      const x = (nearEnd.x + farEnd.x) / 2 - p.width / 2;
+      const width = p.width * this.units(from.id);
+      const x = (this.stageX(near.id, nearEnd.x) + this.stageX(far.id, farEnd.x)) / 2 - width / 2;
       const z0 = near.depth - 8;
       const z1 = far.depth + 90;
-      this.floor(far.id, x, p.width, GROUND - 3, z0, z1, p.kind === "bridge" ? "pt-deck" : "pt-steps");
+      this.floor(far.id, x, width, GROUND - 3, z0, z1, p.kind === "bridge" ? "pt-deck" : "pt-steps");
       if (p.kind === "bridge") {
         const len = z0 - z1;
         let s = `<svg width="${f1(len)}" height="48" viewBox="0 0 ${f1(len)} 48" xmlns="http://www.w3.org/2000/svg"><g stroke="#1d1916" fill="none" stroke-linecap="round">`;
@@ -455,7 +480,7 @@ export class Theatre {
           s += `<path d="M${f1(xx)} ${f1(30 - 26 * 4 * t * (1 - t))} L${f1(xx)} 48" stroke-width="3"/>`;
         }
         s += "</g></svg>";
-        for (const rx of [x, x + p.width])
+        for (const rx of [x, x + width])
           place(this.wall(far.id, rx, GROUND - 48, 48, z0, len, "pt-rail"), s, len, 48, this.bitmapScale);
       }
     }
@@ -466,17 +491,26 @@ export class Theatre {
       const right = row.find((b) => b.x >= p.from.x);
       const lv = left ? this.buildings.get(left.id) : undefined;
       const rv = right ? this.buildings.get(right.id) : undefined;
-      const x0 = lv ? lv.def.x + lv.form.body.x1 : p.from.x - p.width / 2;
-      const x1 = rv ? rv.def.x + rv.form.body.x0 : p.from.x + p.width / 2;
+      const x0 = lv
+        ? lv.def.x * this.units(from.id) + lv.form.body.x1 * lv.scale
+        : (p.from.x - p.width / 2) * this.units(from.id);
+      const x1 = rv
+        ? rv.def.x * this.units(from.id) + rv.form.body.x0 * rv.scale
+        : (p.from.x + p.width / 2) * this.units(from.id);
       const back = from.depth - p.length;
       this.floor(from.id, x0, x1 - x0, GROUND, from.depth, back, "pt-alley-floor");
       const wallH = Math.min(
-        lv ? lv.form.height - lv.form.body.top : 300,
-        rv ? rv.form.height - rv.form.body.top : 300,
+        lv ? (lv.form.height - lv.form.body.top) * lv.scale : 300,
+        rv ? (rv.form.height - rv.form.body.top) * rv.scale : 300,
+        FIGURE_H * 1.9,
       );
       const end = document.createElement("div");
       end.className = "pt-plane pt-alley-end";
       end.style.cssText = `left:${f1(x0)}px;top:${f1(GROUND - wallH)}px;width:${f1(x1 - x0)}px;height:${f1(wallH)}px;transform:translateZ(${back}px)`;
+      end.style.setProperty("--wall-paper", lv?.form.palette.body ?? rv?.form.palette.body ?? "#847866");
+      const exit = document.createElement("div");
+      exit.className = "pt-alley-exit";
+      end.appendChild(exit);
       end.dataset.look = `alley:${p.id}`;
       this.world.appendChild(end);
       this.group(from.id, end);
@@ -488,7 +522,7 @@ export class Theatre {
       if (p.kind === "door" && e === p.from) continue; // the door itself is the hotspot
       const hot = this.card(
         e.layer,
-        e.x - 60,
+        e.x * this.units(e.layer) - 60,
         GROUND - (p.kind === "alley" ? 120 : 50),
         120,
         p.kind === "alley" ? 120 : 50,
@@ -519,8 +553,8 @@ export class Theatre {
     const l = this.ix.layers.get(layer);
     if (!l) return;
     if (el.parentElement !== this.world) this.world.appendChild(el);
-    const at = (this.anchors.get(layer) ?? 0) + x - 32;
-    const transform = `translate3d(${f1(at)}px,${GROUND - 150}px,${l.depth}px)`;
+    const at = this.stageX(layer, x) - 32;
+    const transform = `translate3d(${f1(at)}px,${GROUND - FIGURE_H}px,${l.depth}px)`;
     if (el.style.transform !== transform) el.style.transform = transform;
     const shown = this.shownGroups.has(layer);
     if (el.classList.contains("pt-gone") === shown) el.classList.toggle("pt-gone", !shown);
@@ -562,16 +596,14 @@ export class Theatre {
     };
     swap(v.card, drawFacade(v.form, state, style, { text: this.opts.text, id, standalone }));
     for (const s of v.sides)
-      swap(s, drawSide(v.form, state, style, s.depth, s.side, { id: `${id}${s.side[0]}`, standalone }));
+      swap(
+        s,
+        drawSide(v.form, state, style, s.depth / v.scale, s.side, { id: `${id}${s.side[0]}`, standalone }),
+      );
   }
 
   private syncBuildings(w: WorldView): void {
     for (const [id, v] of this.buildings) {
-      const active = String(v.def.layer === this.heroLayer);
-      if (v.card.el.dataset.active !== active) {
-        v.card.el.dataset.active = active;
-        for (const side of v.sides) side.el.dataset.active = active;
-      }
       const shown = shownState(w, id);
       const key = `${shown.style}:${shown.state}`;
       const memory = memoryOf(w, id);
@@ -635,9 +667,16 @@ export class Theatre {
   private shotFor(layer: string, x: number): Shot {
     const l = this.ix.layers.get(layer)!;
     const anchor = this.anchors.get(layer);
-    if (anchor !== undefined) return { z: l.depth, k: 1.65, x: anchor + x, y: GROUND, ys: 610 };
+    if (anchor !== undefined)
+      return { z: l.depth, k: INTERIOR_ZOOM, x: this.stageX(layer, x), y: GROUND, ys: 610 };
     const [lo, hi] = l.walk ?? [x, x];
-    return { z: l.depth, k: 1.35, x: Math.max(lo, Math.min(hi, x)), y: GROUND, ys: 610 };
+    return {
+      z: l.depth,
+      k: OUTDOOR_ZOOM,
+      x: this.stageX(layer, Math.max(lo, Math.min(hi, x))),
+      y: GROUND,
+      ys: 610,
+    };
   }
 
   private shotForLook(t: LookTarget): Shot {
@@ -646,7 +685,7 @@ export class Theatre {
     return {
       z: this.ix.layers.get(p.layer)!.depth,
       k: 2.1,
-      x: (this.anchors.get(p.layer) ?? 0) + p.x,
+      x: this.stageX(p.layer, p.x),
       y: GROUND - lm.height / 2 + p.y,
       ys: 365,
     };
@@ -854,9 +893,9 @@ export class Theatre {
       }
       // Walk the passage in depth: the figure leaves its layer and crosses in 3D.
       const ms = kind === "bridge" ? MS.bridge : MS.stairs;
-      const fromX = from.x - 32;
-      const toX = x - 32;
-      const top = GROUND - 150;
+      const fromX = this.stageX(from.layer, from.x) - 32;
+      const toX = this.stageX(layer, x) - 32;
+      const top = GROUND - FIGURE_H;
       this.hero.style.opacity = "1";
       this.hero.classList.remove("pt-gone");
       const walk = this.hero.animate(
@@ -925,7 +964,7 @@ export class Theatre {
     this.frame.style.height = `${STAGE_H}px`;
     this.frame.style.transform = `scale(${this.scale})`;
     this.viewport.style.perspective = `${PERSPECTIVE}px`;
-    this.viewport.style.perspectiveOrigin = `${f1(this.width / 2)}px 300px`;
+    this.viewport.style.perspectiveOrigin = `${f1(this.width / 2)}px ${EYE_Y}px`;
     if (!this.busy) void this.setCam(this.currentShot(), 0);
   }
 
@@ -1034,10 +1073,11 @@ export class Theatre {
           : PERSPECTIVE / (PERSPECTIVE - depth - this.cam.cz);
       if (Math.abs(k) > 0.001)
         x =
-          this.width / 2 +
-          (sx - this.width / 2) / k -
-          this.cam.tx -
-          (this.anchors.get(t.dataset.ground!) ?? 0);
+          (this.width / 2 +
+            (sx - this.width / 2) / k -
+            this.cam.tx -
+            (this.anchors.get(t.dataset.ground!) ?? 0)) /
+          this.units(t.dataset.ground!);
     }
     return {
       kind: "ground",
