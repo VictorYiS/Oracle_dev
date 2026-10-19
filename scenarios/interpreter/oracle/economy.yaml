@@ -1,7 +1,6 @@
-# 交易系统的数值（设计文档 §6.6）。
-# 当前值来自 P0 经济模拟的推荐（docs/reports/econ-sim-v0.md）：
-# 四项设计检查都留有余量地通过；每项参数扰动 ±15% 时"适度领先"仍然成立。
-# 改动后运行 `npm run econ` 重新检查；`npm test` 也会守住这几项检查。
+# The trade-off numbers. These are the values the P0 economy search recommended: all four
+# design checks pass with a margin, and "moderate play wins" still holds with every value
+# nudged by ±15%. After a change, run `npm run econ` to check again; `npm test` guards the checks too.
 economy:
   daily_petitions: 5
   petition_slots: { glance: 1, ponder: 2, decree: 3 }

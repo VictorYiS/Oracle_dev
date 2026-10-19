@@ -36,7 +36,7 @@ export interface SandboxParams {
   feeScale: number;
 }
 
-// Consequence sizes recommended by docs/reports/econ-sim-v0.md. P3's real simulation
+// Consequence sizes recommended by the P0 economy search (npm run econ). P3's real simulation
 // must land in this range for the pack's economy values to hold.
 export const DEFAULT_SANDBOX: SandboxParams = {
   days: 30,

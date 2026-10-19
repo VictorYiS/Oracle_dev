@@ -2,8 +2,8 @@
 // 1. Evaluate the designer defaults from the default pack.
 // 2. Random-search nearby parameter sets for ones that satisfy every design check.
 // 3. Re-verify the closest feasible set with more seeds, test robustness, write the report.
-import { writeFileSync } from "node:fs";
-import { join } from "node:path";
+import { mkdirSync, writeFileSync } from "node:fs";
+import { dirname, join } from "node:path";
 import type { EconomyParams } from "../../src/core/content/schema";
 import { Rng } from "../../src/core/random/prng";
 import { loadPack } from "../lib/read-pack";
@@ -297,6 +297,7 @@ ${[
 - 恩赐只有抽象效果，细则的"荒诞"部分没有建模。
 `;
 
+mkdirSync(dirname(OUT), { recursive: true });
 writeFileSync(OUT, report);
 console.log(report.split("\n## 设计检查")[0]);
 console.log(`\nReport written to ${OUT}`);

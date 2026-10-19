@@ -3,7 +3,7 @@ import prettier from "eslint-config-prettier";
 import globals from "globals";
 import tseslint from "typescript-eslint";
 
-// Hard rule 1 (docs/plan/Oracle_Dev_Plan.md §1.4): src/core must run headless.
+// Hard rule 1: src/core must run headless.
 // It may not import UI, app shell, providers or Preact, and may not touch browser globals.
 export const corePurityRules = {
   "no-restricted-imports": [
@@ -52,7 +52,17 @@ export const corePurityRules = {
 };
 
 export default tseslint.config(
-  { ignores: ["dist/**", "dist-*/**", "node_modules/**", "playwright-report/**", "test-results/**"] },
+  {
+    ignores: [
+      "dist/**",
+      "dist-*/**",
+      "node_modules/**",
+      "playwright-report/**",
+      "test-results/**",
+      "docs/**",
+      "spikes/**",
+    ],
+  },
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {

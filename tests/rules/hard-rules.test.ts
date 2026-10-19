@@ -1,4 +1,4 @@
-// Proves the two hard rules (CLAUDE.md, "两条硬规则") actually catch violations.
+// Proves the two hard rules (a headless core; no scenario content in engine code) actually catch violations.
 import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ESLint } from "eslint";

@@ -12,7 +12,7 @@ const REPO = join(import.meta.dirname, "..", "..");
 const WORLD = resolve(REPO, "src/core/world");
 const COMMANDS = resolve(REPO, "src/core/commands");
 const GAME = resolve(REPO, "src/core/game");
-const SCANNED = ["src", "tools", "spikes"];
+const SCANNED = ["src", "tools"];
 
 /** Each guarded module and the folders allowed to import it. */
 const GUARDED: { module: string; allowed: string[] }[] = [

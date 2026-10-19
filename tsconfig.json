@@ -17,5 +17,5 @@
     "noEmit": true,
     "types": ["node", "vite/client"]
   },
-  "include": ["src", "tools", "tests", "spikes", "vite.config.ts", "playwright.config.ts"]
+  "include": ["src", "tools", "tests", "vite.config.ts", "playwright.config.ts"]
 }

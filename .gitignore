@@ -8,10 +8,10 @@ test-results/
 .env
 .env.*
 
-# Design docs and plan stay local until the owner decides whether to publish them
-# (they contain the full story and its spoilers).
-docs/design/
-docs/plan/
-docs/reports/econ-sim-latest.md
+# Internal working notes stay on the owner's machine: design, plan, review notes, reports,
+# the project's assistant instructions and finished experiments.
+docs/
+CLAUDE.md
+spikes/
 tests/.tmp-*/
 public/scenarios/

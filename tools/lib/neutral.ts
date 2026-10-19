@@ -1,4 +1,4 @@
-// Hard rule 2 (docs/plan/Oracle_Dev_Plan.md §1.4): engine code never names scenario content.
+// Hard rule 2: engine code never names scenario content.
 // Forbidden terms = every namespaced content id in every pack + each pack's engine_forbidden_terms.
 import { contentIds, type Pack } from "../../src/core/content/pack";
 
