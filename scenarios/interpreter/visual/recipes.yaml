@@ -1,0 +1,39 @@
+# Recipes: the numbers for the engine's shape grammars. Ranges are [min, max]; the seed picks
+# within them, so the same seed always gives the same building. A building fills its lot's width.
+recipes:
+  - id: recipe.row_house
+    name: "@recipe.row_house.name"
+    grammar: terrace
+    floors: [2, 4]
+    bay_width: [52, 70]
+    floor_height: [70, 84]
+    base: [16, 26]
+    roofs: [flat, gable, sawtooth, mansard, dome]
+    windows: [rect, arch, tall]
+    chimneys: [0, 2]
+
+  - id: recipe.works
+    name: "@recipe.works.name"
+    grammar: hall
+    floors: [1, 2]
+    bay_width: [44, 58]
+    floor_height: [96, 126]
+    roofs: [sawtooth, barrel, flat]
+    stacks: [1, 2]
+    stack_height: [110, 210]
+
+  - id: recipe.stack
+    name: "@recipe.stack.name"
+    grammar: stack
+    boxes: [2, 4]
+    box_height: [58, 88]
+    lean: 18
+    windows: [1, 2]
+
+  - id: recipe.tower
+    name: "@recipe.tower.name"
+    grammar: tower
+    floors: [7, 18]
+    floor_height: [52, 68]
+    setbacks: [0, 2]
+    crowns: [spire, crystal, antenna, stepped, flat]

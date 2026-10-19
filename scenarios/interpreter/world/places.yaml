@@ -1,0 +1,163 @@
+# The East Bank: one street scene in four depths (the street, the riverbank down the steps, the
+# far bank across the bridge, and the distant city), plus three interiors. Positions are in
+# drawing units; depth 0 is the street, negative is further away. Walking along a layer and taking
+# a passage both cost game time (see params below and each passage's length).
+calendar:
+  day_start_minute: 360
+  dusk_minute: 1080
+
+params:
+  hero_speed: 80
+  resident_speed: 60
+  presence_reach: 120
+  passage_reach: 50
+  cases_per_day: [3, 4]
+  original_minutes: 40
+  leave_after_dark_days: 6
+
+districts:
+  - id: district.east_bank
+    name: "@district.east_bank.name"
+    style: style.quay
+    # The line carries this much; the books say it has a little room to spare.
+    capacity: 38
+    repair_crews: 1
+
+scenes:
+  - id: scene.east_bank
+    name: "@scene.east_bank.name"
+    district: district.east_bank
+    kind: outdoor
+    extent: [-1400, 5600]
+    grounds:
+      - { kind: pavement, near: 260, far: -40, layer: layer.street }
+      - { kind: quay, near: -40, far: -300, layer: layer.riverbank }
+      - { kind: water, near: -300, far: -480, drop: 16, layer: layer.far_bank }
+      - { kind: quay, near: -480, far: -660, layer: layer.far_bank }
+  - id: scene.registry
+    name: "@scene.registry.name"
+    district: district.east_bank
+    kind: interior
+    extent: [-800, 800]
+    backdrop: landmark.registry_hall
+  - id: scene.room_17b
+    name: "@scene.room_17b.name"
+    district: district.east_bank
+    kind: interior
+    extent: [-800, 800]
+    backdrop: landmark.room_17b
+  - id: scene.substation
+    name: "@scene.substation.name"
+    district: district.east_bank
+    kind: interior
+    extent: [-800, 800]
+    backdrop: landmark.substation
+
+layers:
+  - { id: layer.near, name: "@layer.near.name", scene: scene.east_bank, depth: 180, kind: near }
+  - {
+      id: layer.street,
+      name: "@layer.street.name",
+      scene: scene.east_bank,
+      depth: 0,
+      kind: walk,
+      walk: [-200, 3300],
+    }
+  - {
+      id: layer.riverbank,
+      name: "@layer.riverbank.name",
+      scene: scene.east_bank,
+      depth: -220,
+      kind: walk,
+      walk: [-200, 3300],
+    }
+  - {
+      id: layer.far_bank,
+      name: "@layer.far_bank.name",
+      scene: scene.east_bank,
+      depth: -600,
+      kind: walk,
+      walk: [-450, 3650],
+    }
+  - id: layer.sky
+    name: "@layer.sky.name"
+    scene: scene.east_bank
+    depth: -3000
+    kind: far
+    skyline: { recipe: recipe.tower, style: style.spire, seed: 4242, lot: [130, 290] }
+  - {
+      id: layer.registry_hall,
+      name: "@layer.registry_hall.name",
+      scene: scene.registry,
+      depth: -1200,
+      kind: walk,
+      walk: [-560, 560],
+    }
+  - {
+      id: layer.room_17b,
+      name: "@layer.room_17b.name",
+      scene: scene.room_17b,
+      depth: -1200,
+      kind: walk,
+      walk: [-560, 560],
+    }
+  - {
+      id: layer.substation,
+      name: "@layer.substation.name",
+      scene: scene.substation,
+      depth: -1200,
+      kind: walk,
+      walk: [-560, 560],
+    }
+
+passages:
+  - id: passage.stairs
+    name: "@passage.stairs.name"
+    kind: stairs
+    from: { layer: layer.street, x: 2900 }
+    to: { layer: layer.riverbank, x: 2900 }
+    length: 220
+    width: 110
+  - id: passage.bridge
+    name: "@passage.bridge.name"
+    kind: bridge
+    from: { layer: layer.riverbank, x: 1500 }
+    to: { layer: layer.far_bank, x: 1500 }
+    length: 380
+  - id: passage.alley
+    name: "@passage.alley.name"
+    kind: alley
+    from: { layer: layer.far_bank, x: 2615 }
+    to: { layer: layer.substation, x: 0 }
+    length: 330
+    width: 170
+  - id: passage.registry_door
+    name: "@passage.registry_door.name"
+    kind: door
+    from: { layer: layer.street, x: -30 }
+    to: { layer: layer.registry_hall, x: 0 }
+    length: 40
+  - id: passage.door_17b
+    name: "@passage.door_17b.name"
+    kind: door
+    from: { layer: layer.far_bank, x: 2220 }
+    to: { layer: layer.room_17b, x: 0 }
+    length: 40
+
+spots:
+  - { id: spot.market, name: "@spot.market.name", layer: layer.riverbank, x: 1100 }
+  - { id: spot.registry_desk, name: "@spot.registry_desk.name", layer: layer.registry_hall, x: 260 }
+  - { id: spot.switch_room, name: "@spot.switch_room.name", layer: layer.substation, x: -200 }
+
+# The Interpreter's window, on the street. Visitors queue to its right.
+window:
+  layer: layer.street
+  x: 700
+  reach: 60
+  queue: { x: 780, gap: 44 }
+
+start:
+  hero:
+    layer: layer.street
+    x: 700
+    look: { coat: "#6b4a3a", hat: false }

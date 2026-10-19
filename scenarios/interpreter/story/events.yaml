@@ -1,30 +1,19 @@
-# Rolled once each dawn, in this order. Chances are per day.
+# Things that happen at dawn. Events without a message happen unseen: the town changes and nobody
+# writes it down. Events with a message are news, and show in the event feed.
 events:
-  - id: event.rain
-    message: "@event.rain.message"
-    trigger: { chance_per_day: 0.2, weather_in: [weather.clear] }
-    effects: [{ type: set_weather, weather: weather.rain }]
-  - id: event.fog_thickens
-    message: "@event.fog_thickens.message"
-    trigger: { chance_per_day: 0.12, min_day: 2, weather_in: [weather.clear, weather.rain] }
-    effects: [{ type: set_weather, weather: weather.thick_fog }]
-  - id: event.fog_lifts
-    message: "@event.fog_lifts.message"
-    trigger: { chance_per_day: 0.35, weather_in: [weather.rain, weather.thick_fog] }
-    effects: [{ type: set_weather, weather: weather.clear }]
-  - id: event.berry_season
-    message: "@event.berry_season.message"
-    trigger: { chance_per_day: 0.1, min_day: 3 }
-    effects: [{ type: node_bonus, node: node.berry_bush, amount: 6 }]
-  - id: event.wanderer
-    message: "@event.wanderer.message"
-    trigger: { chance_per_day: 0.25, min_day: 2, needs_free_housing: true }
-    effects: [{ type: spawn_unit, unit: unit.resident, count: 1 }]
-  - id: event.wisp_fault
-    message: "@event.wisp_fault.message"
-    trigger: { chance_per_day: 0.08, min_day: 4 }
-    effects: [{ type: disable_worker, days: 1 }]
-  - id: event.odd_find
-    message: "@event.odd_find.message"
-    trigger: { chance_per_day: 0.05, min_day: 5, once: true }
-    effects: [{ type: add_resource, resource: res.paperclip, amount: 3 }]
+  # The family at No. 9 leaves for the coast. Nobody tells the registry.
+  - id: event.dima_leaves
+    trigger: { day: 5 }
+    effects: [{ type: move_out, person: person.dima }]
+  # Lena runs a cable from the works hall. The bureau's books never hear of it.
+  - id: event.lena_hooks_up
+    trigger: { day: 8 }
+    effects: [{ type: power, building: bld.eb_05, on: true }]
+  # A newcomer moves into the empty house where Pavel is still registered.
+  - id: event.kasia_arrives
+    trigger: { day: 10 }
+    effects: [{ type: move_in, person: person.kasia, building: bld.eb_04 }]
+  - id: event.storm
+    message: "@event.storm.message"
+    trigger: { chance_per_day: 0.12, min_day: 3 }
+    effects: [{ type: damage, building: bld.eb_01, damaged: true }]

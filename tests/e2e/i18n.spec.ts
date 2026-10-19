@@ -1,5 +1,6 @@
-// P1 acceptance A20: in Chinese, every screen of the manual loop is fully Chinese (no English UI
-// copy, no unresolved @keys), and switching language updates open screens at once.
+// P1 acceptance A20, extended in P2 to the paper theatre's hints, the window, papers in close-up and
+// the pending tray: in Chinese every screen is fully Chinese (no English UI copy, no unresolved
+// @keys), and switching language updates open screens at once.
 import { writeFileSync } from "node:fs";
 import { expect, test, type Page } from "@playwright/test";
 import { en } from "../../src/ui/i18n/en";
@@ -38,46 +39,60 @@ async function expectChineseOnly(page: Page, where: string) {
   expect(text, `unresolved text key on ${where}`).not.toMatch(/@[a-z]+\.[a-z_.]+/);
 }
 
-test("the manual loop's screens are all in Chinese, and switching language updates them", async ({
+test("every screen is in Chinese: the street, the window, a paper, the procedure, the tray; switching updates them", async ({
   page,
 }) => {
+  test.setTimeout(90_000);
   await page.goto("/");
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("译者");
   await expectChineseOnly(page, "the title screen");
 
   await newGame(page, 42);
-  await expectChineseOnly(page, "the game at dawn");
+  await expectChineseOnly(page, "the street at dawn");
   await page.getByTestId("advance").click();
   await page.getByTestId("advance").click();
   await expect(page.getByTestId("phase")).toHaveText("白天");
+  await page.getByTestId("speed-pause").click();
+  await expect(page.getByTestId("hint")).toHaveText("E：窗口");
+  await expect(page.getByTestId("where")).toHaveText("街道");
+  await expectChineseOnly(page, "the street by day, with its hint");
 
-  const you = await page.evaluate(
-    () =>
-      (window.oracle!.world() as { units: { id: string; role: string }[] }).units.find(
-        (u) => u.role === "avatar",
-      )!.id,
-  );
-  await page.getByTestId(`unit-${you}`).click();
-  await expectChineseOnly(page, "the selection panel");
-
-  await page.getByTestId("act-gather").click();
-  await expect(page.getByTestId("hint")).toHaveText(/选择要采集的东西/);
-  await expectChineseOnly(page, "the targeting hint");
+  // The window, a visitor, their papers and the procedure, the Oracle's suggestion.
+  await page.keyboard.press("e");
+  await expect(page.getByTestId("desk")).toBeVisible();
+  for (let i = 0; i < 60 && !(await page.getByTestId("case").isVisible()); i++) {
+    await page.evaluate(() => window.oracle!.advance(5));
+  }
+  await expect(page.getByTestId("case")).toContainText("东堤 7 号");
+  await expect(page.getByTestId("suggestion")).toContainText("神谕建议");
+  await expectChineseOnly(page, "the window");
+  await page.getByTestId("paper-1").click();
+  await expect(page.getByTestId("paper-source")).toContainText("来源：登记处");
+  await expectChineseOnly(page, "a paper in close-up");
+  await page.getByTestId("paper-close").click();
+  await page.getByTestId("open-sop").click();
+  await expectChineseOnly(page, "the procedure");
+  await page.getByTestId("sop-close").click();
+  await page.getByTestId("adopt").click();
   await page.keyboard.press("Escape");
 
-  await page.getByTestId("open-build").click();
-  await expect(page.getByTestId("build-menu")).toBeVisible();
-  await expectChineseOnly(page, "the build menu");
+  // The pending tray, settings, key help.
+  await page.getByTestId("pending-toggle").click();
+  await expect(page.getByTestId("pending").locator("[data-pending]")).toContainText("东堤 7 号 有电");
+  await expectChineseOnly(page, "the pending tray");
+  await page.getByTestId("pending-toggle").click();
+  await page.getByTestId("open-settings").click();
+  await expectChineseOnly(page, "settings");
   await page.keyboard.press("Escape");
-
-  await page.getByTestId("open-save").click();
-  await expect(page.getByTestId("save-menu")).toBeVisible();
-  await expectChineseOnly(page, "the save menu");
-  await page.keyboard.press("Escape");
-
   await page.keyboard.press("?");
   await expect(page.getByTestId("help")).toBeVisible();
   await expectChineseOnly(page, "the key help");
+  await page.keyboard.press("Escape");
+
+  // Looking: the camera's line in the corner.
+  await page.keyboard.press("w");
+  await expect(page.getByTestId("focus")).toHaveText("河岸");
+  await expectChineseOnly(page, "looking across");
   await page.keyboard.press("Escape");
 
   await page.evaluate(() => window.oracle!.advance(2000));
@@ -89,6 +104,7 @@ test("the manual loop's screens are all in Chinese, and switching language updat
   await expect(page.getByTestId("phase")).toHaveText("Dusk");
   await expect(page.getByTestId("clock")).toContainText("Day 1");
   await expect(page.getByTestId("advance")).toHaveText("Call it a night");
+  await expect(page.getByTestId("where")).toHaveText("Street");
 });
 
 /** Nothing Chinese left on screen, apart from the language switch's own "中文" button. */

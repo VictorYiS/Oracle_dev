@@ -1,0 +1,269 @@
+# Landmarks: hand-written part data, inked by the same pen as every generated building so they
+# match it. Coordinates are inside the landmark's own box; the bottom edge stands on the ground.
+# Interior backdrops are 1600 × 760 with the floor line at y = 600.
+landmarks:
+  # ---- buildings ------------------------------------------------------------------------------
+  - id: landmark.counting_house
+    name: "@landmark.counting_house.name"
+    width: 300
+    height: 340
+    palette: { body: "#b8ad95", roof: "#5a5148", trim: "#e1d7c0", door: "#3b3430" }
+    body: [32, 268, 140]
+    shapes:
+      - { poly: [[12, 128], [150, 44], [288, 128]], fill: roof }
+      - { poly: [[32, 340], [32, 140], [268, 140], [268, 340]], fill: body }
+      - { poly: [[8, 128], [292, 128], [292, 142], [8, 142]], fill: trim }
+      - { poly: [[18, 318], [282, 318], [282, 330], [18, 330]], fill: trim }
+      - { poly: [[8, 330], [292, 330], [292, 340], [8, 340]], fill: trim }
+      - { rect: [58, 142, 20, 176], fill: trim, repeat: [46, 2] }
+      - { rect: [176, 142, 20, 176], fill: trim, repeat: [46, 2] }
+      - { door: [132, 228, 36, 90] }
+      - { window: [40, 182, 14, 60] }
+      - { window: [246, 182, 14, 60] }
+      - { window: [86, 240, 12, 40] }
+      - { window: [202, 240, 12, 40] }
+      - { circle: [150, 96, 19], fill: "#efe5cf" }
+      - { line: [150, 96, 150, 83], width: 1.6 }
+      - { line: [150, 96, 160, 100], width: 1.6 }
+      - { text: "@landmark.counting_house.sign", at: [150, 164], size: 15 }
+
+  - id: landmark.registry
+    name: "@landmark.registry.name"
+    width: 300
+    height: 330
+    palette: { body: "#c2b59a", roof: "#4f565d", trim: "#e6dcc4", door: "#3b3430" }
+    body: [24, 276, 124]
+    shapes:
+      - { poly: [[10, 110], [150, 40], [290, 110]], fill: roof }
+      - { poly: [[6, 110], [294, 110], [294, 124], [6, 124]], fill: trim }
+      - { poly: [[24, 124], [276, 124], [276, 312], [24, 312]], fill: body }
+      - { rect: [44, 124, 18, 188], fill: trim, repeat: [52, 2] }
+      - { rect: [186, 124, 18, 188], fill: trim, repeat: [52, 2] }
+      - { poly: [[10, 312], [290, 312], [290, 321], [10, 321]], fill: trim }
+      - { poly: [[0, 321], [300, 321], [300, 330], [0, 330]], fill: trim }
+      - { door: [126, 222, 48, 90] }
+      - { window: [70, 150, 20, 56] }
+      - { window: [212, 150, 20, 56] }
+      - { window: [132, 146, 36, 40] }
+      - { text: "@landmark.registry.sign", at: [150, 102], size: 14 }
+
+  # ---- street furniture -------------------------------------------------------------------------
+  - id: landmark.office
+    name: "@landmark.office.name"
+    width: 180
+    height: 230
+    palette: { body: "#6f6658", roof: "#3b3430", trim: "#e9dfc8", door: "#2f2b27" }
+    body: [10, 170, 40]
+    shapes:
+      - { poly: [[0, 42], [90, 8], [180, 42]], fill: roof }
+      - { poly: [[10, 40], [170, 40], [170, 230], [10, 230]], fill: body }
+      - { rect: [36, 48, 108, 22], fill: trim }
+      - { text: "@landmark.office.sign", at: [90, 64], size: 13 }
+      - { rect: [30, 82, 120, 66], fill: "#dfeaff", glow: true }
+      - { circle: [90, 115, 15], stroke: "#5a7fc0", width: 2 }
+      - { circle: [90, 115, 5], fill: "#5a7fc0" }
+      - { poly: [[18, 148], [162, 148], [162, 162], [18, 162]], fill: trim }
+      - { door: [132, 178, 26, 52] }
+
+  - id: landmark.kiosk
+    name: "@landmark.kiosk.name"
+    width: 120
+    height: 200
+    palette: { body: "#4d5560", roof: "#2f353d", trim: "#dfeaff", door: "#2f353d" }
+    shapes:
+      - { poly: [[10, 200], [10, 40], [110, 40], [110, 200]], fill: body }
+      - { poly: [[2, 40], [60, 8], [118, 40]], fill: roof }
+      - { rect: [26, 62, 68, 54], fill: "#dfeaff", glow: true }
+      - { circle: [60, 89, 14], stroke: "#5a7fc0", width: 2 }
+      - { circle: [60, 89, 5], fill: "#5a7fc0" }
+
+  - id: landmark.board
+    name: "@landmark.board.name"
+    width: 110
+    height: 150
+    palette: { body: "#7a5c40", roof: "#5a5148", trim: "#e9dfc8", door: "#3b3430" }
+    shapes:
+      - { line: [22, 150, 22, 40], width: 4 }
+      - { line: [88, 150, 88, 40], width: 4 }
+      - { poly: [[6, 18], [104, 18], [104, 92], [6, 92]], fill: body }
+      - { poly: [[14, 26], [50, 24], [52, 62], [16, 64]], fill: trim, width: 1.4 }
+      - { poly: [[58, 30], [96, 28], [95, 56], [59, 58]], fill: "#cfe0ff", width: 1.4 }
+      - { poly: [[60, 62], [92, 63], [90, 86], [61, 85]], fill: trim, width: 1.4 }
+      - { text: "@landmark.oracle_mark", at: [77, 48], size: 15, fill: "#3b5d9a" }
+
+  - id: landmark.mailbox
+    name: "@landmark.mailbox.name"
+    width: 50
+    height: 110
+    palette: { body: "#3f5a4c", roof: "#2f353d", trim: "#d9cfb8", door: "#2f2b27" }
+    shapes:
+      - { line: [25, 110, 25, 50], width: 4 }
+      - { poly: [[4, 14], [46, 14], [46, 52], [4, 52]], fill: body }
+      - { line: [12, 26, 38, 26], width: 2 }
+
+  - id: landmark.lamp
+    name: "@landmark.lamp.name"
+    width: 80
+    height: 530
+    palette: { body: "#15120f", roof: "#15120f", trim: "#15120f", door: "#15120f" }
+    shapes:
+      - { circle: [40, 48, 64], glow: true }
+      - { poly: [[36, 530], [37, 70], [43, 70], [44, 530]], fill: body, stroke: "#15120f" }
+      - { poly: [[22, 40], [58, 40], [52, 62], [28, 62]], fill: body, stroke: "#15120f" }
+      - { poly: [[30, 40], [40, 26], [50, 40]], fill: body, stroke: "#15120f" }
+
+  - id: landmark.rail
+    name: "@landmark.rail.name"
+    width: 6000
+    height: 56
+    palette: { body: "#15120f", roof: "#15120f", trim: "#15120f", door: "#15120f" }
+    shapes:
+      - { line: [0, 6, 6000, 6], width: 6, stroke: "#15120f" }
+      - { line: [0, 6, 0, 56], width: 5, stroke: "#15120f", repeat: [64, 94] }
+
+  - id: landmark.boat
+    name: "@landmark.boat.name"
+    width: 220
+    height: 70
+    palette: { body: "#5a3e30", roof: "#3d352d", trim: "#d9cfb8", door: "#2f2b27" }
+    shapes:
+      - { line: [110, 0, 110, 36], width: 3 }
+      - { poly: [[110, 4], [150, 30], [110, 30]], fill: trim, width: 1.4 }
+      - { poly: [[0, 34], [220, 34], [196, 66], [22, 66]], fill: body }
+      - { line: [10, 44, 210, 44], width: 1.2 }
+
+  - id: landmark.crates
+    name: "@landmark.crates.name"
+    width: 96
+    height: 64
+    palette: { body: "#8a7458", roof: "#5a3e30", trim: "#b39b72", door: "#2f2b27" }
+    shapes:
+      - { rect: [0, 28, 44, 36], fill: body }
+      - { rect: [46, 18, 50, 46], fill: trim }
+      - { rect: [12, 0, 40, 28], fill: body }
+      - { line: [0, 28, 44, 64], width: 1.2 }
+      - { line: [46, 18, 96, 64], width: 1.2 }
+
+  # ---- interiors (backdrops) ---------------------------------------------------------------------
+  - id: landmark.registry_hall
+    name: "@landmark.registry_hall.name"
+    width: 1600
+    height: 760
+    palette: { body: "#7d7466", roof: "#3d352d", trim: "#d9cfb8", door: "#2a2420" }
+    shapes:
+      - { rect: [0, 0, 1600, 600], fill: body }
+      - { line: [0, 0, 0, 588], width: 1, opacity: 0.25, repeat: [46, 35] }
+      - { rect: [0, 588, 1600, 14], fill: roof }
+      - { rect: [0, 600, 1600, 160], fill: "#55473a" }
+      - { line: [0, 630, 1600, 630], width: 1, opacity: 0.35 }
+      - { line: [0, 670, 1600, 670], width: 1, opacity: 0.35 }
+      - { line: [0, 720, 1600, 720], width: 1, opacity: 0.35 }
+      - { window: [260, 150, 130, 250] }
+      - { window: [1210, 150, 130, 250] }
+      - { rect: [690, 170, 220, 150], fill: "#c9b88f" }
+      - { text: "@landmark.registry_hall.sign", at: [800, 252], size: 22 }
+      - { door: [752, 392, 96, 208] }
+
+  - id: landmark.room_17b
+    name: "@landmark.room_17b.name"
+    width: 1600
+    height: 760
+    palette: { body: "#6c6458", roof: "#3d352d", trim: "#d9cfb8", door: "#2a2420" }
+    shapes:
+      - { rect: [0, 0, 1600, 600], fill: body }
+      - { line: [0, 0, 0, 588], width: 1, opacity: 0.12, repeat: [46, 35] }
+      - { rect: [0, 588, 1600, 14], fill: roof }
+      - { rect: [0, 600, 1600, 160], fill: "#55473a" }
+      - { line: [0, 642, 1600, 642], width: 1, opacity: 0.35 }
+      - { line: [0, 694, 1600, 694], width: 1, opacity: 0.35 }
+      - { line: [1360, 0, 1348, 262], width: 2, clutter: true }
+      - { rect: [1040, 200, 180, 190], fill: "#1d283c" }
+      - { circle: [1180, 246, 14], fill: "#e8dcb5" }
+      - { line: [1130, 200, 1130, 390], width: 2.4 }
+      - { line: [1040, 295, 1220, 295], width: 2.4 }
+      - { line: [1030, 392, 1230, 392], width: 5 }
+      - { poly: [[120, 520], [380, 520], [380, 600], [120, 600]], fill: "#4a4038" }
+      - { poly: [[130, 506], [372, 510], [376, 530], [126, 528]], fill: "#8a8274" }
+      - { poly: [[124, 470], [170, 470], [170, 520], [124, 520]], fill: trim }
+      - { door: [752, 392, 96, 208] }
+      - { rect: [0, 0, 1600, 760], fill: "#0a0a12", opacity: 0.35 }
+      - { circle: [1196, 492, 240], glow: true }
+
+  - id: landmark.substation
+    name: "@landmark.substation.name"
+    width: 1600
+    height: 760
+    palette: { body: "#5e5a52", roof: "#3d352d", trim: "#c9b88f", door: "#2a2420" }
+    shapes:
+      - { rect: [0, 0, 1600, 600], fill: body }
+      - { line: [0, 0, 0, 588], width: 1, opacity: 0.18, repeat: [80, 20] }
+      - { rect: [0, 588, 1600, 14], fill: roof }
+      - { rect: [0, 600, 1600, 160], fill: "#45403a" }
+      - { line: [0, 90, 1600, 90], width: 12, stroke: "#2f2b27" }
+      - { line: [0, 120, 1600, 120], width: 8, stroke: "#3b3430" }
+      - { rect: [1050, 330, 180, 270], fill: "#4b5470" }
+      - { rect: [1270, 360, 150, 240], fill: "#4b5470" }
+      - { poly: [[1080, 300], [1200, 300], [1186, 330], [1094, 330]], fill: trim }
+      - { text: "@landmark.substation.sign", at: [1140, 420], size: 18, fill: "#efc068" }
+      - { door: [752, 392, 96, 208] }
+      - { line: [1140, 120, 1140, 300], width: 4 }
+      - { line: [1345, 120, 1345, 360], width: 4 }
+
+  # ---- interior fittings -------------------------------------------------------------------------
+  - id: landmark.desk
+    name: "@landmark.desk.name"
+    width: 200
+    height: 110
+    palette: { body: "#6b4a3a", roof: "#5a3e30", trim: "#efe5cf", door: "#2f2b27" }
+    shapes:
+      - { poly: [[0, 30], [200, 30], [200, 42], [0, 42]], fill: body }
+      - { line: [12, 42, 12, 110], width: 5 }
+      - { line: [188, 42, 188, 110], width: 5 }
+      - { rect: [30, 42, 90, 34], fill: roof }
+      - { poly: [[26, 10], [90, 6], [94, 18], [28, 20]], fill: trim, width: 1.4 }
+      - { poly: [[60, 4], [120, 0], [128, 15], [64, 18]], fill: "#e9dfc8", width: 1.4 }
+      - { poly: [[158, 30], [158, 0], [174, 0], [174, 30]], fill: "#e9dfc8", width: 1.6 }
+
+  - id: landmark.shelves
+    name: "@landmark.shelves.name"
+    width: 120
+    height: 370
+    palette: { body: "#4a3a2c", roof: "#7a3b2f", trim: "#3f5a4c", door: "#8a7a4a" }
+    shapes:
+      - { rect: [0, 0, 120, 370], fill: body }
+      - { line: [4, 170, 116, 170], width: 2.4 }
+      - { line: [4, 222, 116, 222], width: 2.4 }
+      - { line: [4, 274, 116, 274], width: 2.4 }
+      - { line: [4, 326, 116, 326], width: 2.4 }
+      - { rect: [12, 128, 9, 42], fill: roof, repeat: [12, 4] }
+      - { rect: [64, 132, 10, 38], fill: trim, repeat: [12, 4] }
+      - { rect: [10, 182, 9, 40], fill: door, repeat: [11, 5] }
+      - { rect: [14, 234, 10, 40], fill: trim, repeat: [13, 3] }
+      - { rect: [70, 238, 9, 36], fill: roof, repeat: [12, 3] }
+      - { rect: [12, 286, 9, 40], fill: roof, repeat: [12, 7] }
+
+  - id: landmark.meters
+    name: "@landmark.meters.name"
+    width: 240
+    height: 300
+    palette: { body: "#4b5470", roof: "#2f353d", trim: "#efe5cf", door: "#2f2b27" }
+    shapes:
+      - { rect: [0, 0, 240, 300], fill: body }
+      - { circle: [50, 70, 26], fill: trim, repeat: [70, 3] }
+      - { line: [50, 70, 64, 56], width: 2, repeat: [70, 3] }
+      - { circle: [50, 160, 26], fill: trim, repeat: [70, 3] }
+      - { line: [50, 160, 30, 150], width: 2, repeat: [70, 3] }
+      - { rect: [30, 220, 180, 44], fill: roof }
+      - { text: "@landmark.meters.sign", at: [120, 250], size: 15, fill: "#efc068" }
+
+  - id: landmark.switchboard
+    name: "@landmark.switchboard.name"
+    width: 200
+    height: 320
+    palette: { body: "#3f5a4c", roof: "#2f353d", trim: "#d9cfb8", door: "#9b2a20" }
+    shapes:
+      - { rect: [0, 0, 200, 320], fill: body }
+      - { rect: [24, 30, 20, 50], fill: trim, repeat: [40, 4] }
+      - { rect: [24, 110, 20, 50], fill: trim, repeat: [40, 4] }
+      - { line: [100, 200, 150, 170], width: 7, stroke: "#9b2a20" }
+      - { circle: [100, 200, 9], fill: roof }

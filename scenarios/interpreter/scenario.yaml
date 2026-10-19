@@ -1,8 +1,8 @@
-# Default scenario "The Interpreter" (译者). The engine knows none of the nouns used here: map,
-# resources, boons, all text and the trade-off numbers live in this folder.
-# A new scenario can say `extends: interpreter` and write only what differs.
+# Default scenario "The Interpreter" (译者). The engine knows none of the nouns used here: the
+# town, its people, its paperwork, how its buildings are drawn, all text and the trade-off numbers
+# live in this folder. A new scenario can say `extends: interpreter` and write only what differs.
 id: interpreter
-version: 0.2.0
+version: 0.3.0
 engine: "0"
 # Every language listed here must have complete text (npm run validate checks).
 # The first one is shown when the player's language is not offered.
@@ -19,16 +19,47 @@ engine_forbidden_terms:
     译者,
     德尔斐,
     静雾,
+    东堤,
+    17乙,
     工灵,
     旧账房,
     祈问,
     恩赐,
     现实债,
     回形针当量,
+    玛拉,
+    伊沃,
+    莱娜,
+    奥塞,
+    露丝,
+    尤素福,
+    小梅,
+    安东,
+    帕维尔,
+    索菲亚,
+    季马,
+    哈娜,
+    卡西娅,
     The Interpreter,
     The Hush,
+    Delphi-7,
+    East Bank,
+    17B,
     Wisp,
     Counting House,
     Reality Debt,
     Paperclip Equivalent,
+    Mara,
+    Ivo,
+    Lena,
+    Osei,
+    Ruth,
+    Yusuf,
+    Mei,
+    Anton,
+    Pavel,
+    Sofia,
+    Dima,
+    Hana,
+    Kasia,
   ]

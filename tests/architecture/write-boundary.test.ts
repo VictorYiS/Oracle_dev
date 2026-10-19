@@ -29,6 +29,28 @@ describe("write boundary: lint rule for ui, app, providers and tools", () => {
     ).toContain("no-restricted-imports");
   });
 
+  it("blocks the P2 state systems and covers src/render too", async () => {
+    for (const name of ["residents", "hero", "observe", "cases"]) {
+      expect(
+        await lint(
+          "src/ui/__fixture__.ts",
+          `import { x } from "../core/world/${name}";
+export const y = x;
+`,
+        ),
+        name,
+      ).toContain("no-restricted-imports");
+    }
+    expect(
+      await lint(
+        "src/render/__fixture__.ts",
+        `import { emit } from "../core/world/mutate";
+export const y = emit;
+`,
+      ),
+    ).toContain("no-restricted-imports");
+  });
+
   it("allows read-only views", async () => {
     expect(
       await lint(
@@ -92,6 +114,25 @@ describe("write boundary", () => {
         name,
       ).toEqual([]);
     }
+  });
+
+  it("guards the P2 state systems, and keeps src/render out", () => {
+    for (const name of ["residents", "hero", "observe", "cases"]) {
+      expect(
+        findBoundaryViolations("src/ui/Desk.tsx", `import { x } from "../core/world/${name}";`),
+        name,
+      ).toHaveLength(1);
+      expect(
+        findBoundaryViolations("src/core/game/game.ts", `import { x } from "../world/${name}";`),
+        name,
+      ).toEqual([]);
+    }
+    expect(
+      findBoundaryViolations("src/render/theatre.ts", `import { remember } from "../core/world/mutate";`),
+    ).toEqual([{ file: "src/render/theatre.ts", line: 1, specifier: "../core/world/mutate" }]);
+    expect(
+      findBoundaryViolations("src/render/theatre.ts", `import { shownState } from "../core/world/query";`),
+    ).toEqual([]);
   });
 
   it("lets the world's own systems and the command bus use it", () => {

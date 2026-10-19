@@ -1,22 +1,13 @@
 // The command bus: schema → permission → version → targets and preconditions → execute.
 // Every accepted command bumps the world version and is the cause of the events it produces.
-import {
-  bumpVersion,
-  type Ctx,
-  emit,
-  findBuilding,
-  findUnit,
-  placeBuilding,
-  setJob,
-  setPath,
-  setWorkplace,
-  takeStock,
-} from "../world/mutate";
-import { lookup } from "../world/pack-index";
-import { findPath } from "../world/path";
-import { buildingById, grid, isExplored, nodeAt, placementProblem, workersAt } from "../world/query";
-import { nextPhase } from "../world/time";
-import { type Cause, inBounds, tileIndex, type UnitState } from "../world/types";
+import { decide, readOriginal } from "../world/cases";
+import { heroThrough } from "../world/hero";
+import { addPending, bumpVersion, type Ctx, emit, findBuilding, setRecord } from "../world/mutate";
+import { observe } from "../world/observe";
+import { ends } from "../world/places";
+import { advanceTicks, nextPhase, ticksUntilDusk } from "../world/time";
+import type { Cause } from "../world/types";
+import { decisionProblem, readProblem, suggestionFor } from "../world/window";
 import { Command, type CommandResult, PERMISSIONS, type Rejection } from "./schema";
 
 class Refused extends Error {
@@ -65,100 +56,87 @@ export function submit(ctx: Ctx, raw: unknown, seq: number): CommandResult {
   return { ok: true, seq };
 }
 
-function unitFor(ctx: Ctx, id: string): UnitState {
-  return findUnit(ctx.s, id) ?? refuse("INVALID_TARGET", `no unit ${id}`);
-}
+const daytime = (ctx: Ctx, what: string) => {
+  if (ctx.s.clock.phase !== "day") refuse("PRECONDITION_FAILED", `${what} only while the day runs`);
+};
 
-function tileFor(ctx: Ctx, [x, y]: [number, number]): number {
-  if (!inBounds(ctx.s, x, y)) refuse("INVALID_TARGET", `(${x},${y}) is outside the map`);
-  return tileIndex(ctx.s, x, y);
-}
-
-function controllable(unit: UnitState): void {
-  if (unit.role === "resident") refuse("PRECONDITION_FAILED", "residents work on their own");
-  if (unit.disabledDays > 0) refuse("PRECONDITION_FAILED", `${unit.id} is out of action`);
-}
-
-function pathFor(ctx: Ctx, unit: UnitState, to: number): number[] {
-  return (
-    findPath(grid(ctx), tileIndex(ctx.s, unit.x, unit.y), to) ?? refuse("PRECONDITION_FAILED", "no way there")
-  );
-}
+const problem = (p: { code: Rejection; reason: string } | null) => {
+  if (p) refuse(p.code, p.reason);
+};
 
 function execute(ctx: Ctx, cmd: Command, cause: Cause): void {
+  const { s, ix } = ctx;
   switch (cmd.type) {
     case "phase.advance": {
       if (!nextPhase(ctx)) refuse("PRECONDITION_FAILED", "the day runs until dusk");
-      emit(ctx, "phase.changed", { phase: ctx.s.clock.phase, day: ctx.s.clock.day }, cause);
+      emit(ctx, "phase.changed", { phase: s.clock.phase, day: s.clock.day }, cause);
       return;
     }
-    case "unit.move": {
-      const unit = unitFor(ctx, cmd.unit);
-      const to = tileFor(ctx, cmd.to);
-      controllable(unit);
-      const path = pathFor(ctx, unit, to);
-      setJob(unit, { kind: "move", target: to, cause });
-      setPath(unit, path);
+    case "hero.walk": {
+      const layer = ix.layers.get(s.hero.layer);
+      const [lo, hi] = layer?.walk ?? [s.hero.x, s.hero.x];
+      if (cmd.to < lo || cmd.to > hi)
+        refuse("INVALID_TARGET", `x=${cmd.to} is off the walkable stretch [${lo}, ${hi}]`);
+      daytime(ctx, "you can walk");
+      s.hero.target = cmd.to === s.hero.x ? null : cmd.to;
       return;
     }
-    case "unit.gather": {
-      const unit = unitFor(ctx, cmd.unit);
-      const tile = tileFor(ctx, cmd.at);
-      controllable(unit);
-      if (!isExplored(ctx.s, cmd.at[0], cmd.at[1]))
-        refuse("PRECONDITION_FAILED", "that tile has not been seen");
-      const node = nodeAt(ctx.s, tile);
-      if (!node || node.amount === 0) refuse("INVALID_TARGET", "nothing to gather there");
-      if (lookup(ctx.ix.units, unit.type, "unit type").carry === 0)
-        refuse("PRECONDITION_FAILED", `${unit.id} cannot carry`);
-      const yields = lookup(ctx.ix.nodes, node!.type, "node").yields;
-      const deliverFirst = unit.carrying !== null && unit.carrying.resource !== yields;
-      const path = deliverFirst ? [] : pathFor(ctx, unit, tile);
-      setJob(unit, { kind: "gather", node: tile, stage: deliverFirst ? "to_depot" : "to_node", cause });
-      setPath(unit, path);
+    case "hero.cross": {
+      const p = ix.passages.get(cmd.passage) ?? refuse("INVALID_TARGET", `no passage ${cmd.passage}`);
+      daytime(ctx, "you can go out");
+      const end = ends(p, s.hero.layer);
+      if (!end || Math.abs(end.here.x - s.hero.x) > ix.params.passage_reach)
+        refuse("PRECONDITION_FAILED", `you are not at either end of ${p.id}`);
+      // The way through takes its time; you are on the other side when it is over.
+      s.hero.target = null;
+      const minutes = heroThrough(ctx, p.id);
+      observe(ctx, cause);
+      advanceTicks(ctx, minutes);
       return;
     }
-    case "unit.build": {
-      const unit = unitFor(ctx, cmd.unit);
-      controllable(unit);
-      const site = findBuilding(ctx.s, cmd.site) ?? refuse("INVALID_TARGET", `no site ${cmd.site}`);
-      if (site.complete) refuse("PRECONDITION_FAILED", `${site.id} is already built`);
-      const path = pathFor(ctx, unit, tileIndex(ctx.s, site.x, site.y));
-      setJob(unit, { kind: "build", site: site.id, stage: "to_site", cause });
-      setPath(unit, path);
+    case "hero.wait":
+      daytime(ctx, "time passes");
+      advanceTicks(ctx, Math.min(cmd.minutes, ticksUntilDusk(ctx)));
+      return;
+    case "case.decide":
+      problem(decisionProblem(ctx, cmd.case, cmd.action));
+      decide(ctx, cmd.case, cmd.action, "manual", cause);
+      return;
+    case "case.adopt": {
+      const suggestion = suggestionFor(ctx, cmd.case) ?? refuse("INVALID_TARGET", `no case ${cmd.case}`);
+      problem(decisionProblem(ctx, cmd.case, suggestion.action));
+      const c = s.cases.find((k) => k.id === cmd.case)!;
+      decide(ctx, cmd.case, suggestion.action, "oracle", cause);
+      addPending(s, {
+        case: c.id,
+        type: c.type,
+        building: c.building,
+        reason: suggestion.reason,
+        claims: suggestion.claims,
+        day: s.clock.day,
+        verdict: null,
+        how: null,
+        checked: null,
+      });
       return;
     }
-    case "unit.stop": {
-      const unit = unitFor(ctx, cmd.unit);
-      setJob(unit, null);
+    case "pending.read":
+      problem(readProblem(ctx, cmd.item));
+      advanceTicks(ctx, Math.min(ix.params.original_minutes, ticksUntilDusk(ctx)));
+      readOriginal(ctx, cmd.item, cause);
+      return;
+    case "debug.truth": {
+      const b = findBuilding(s, cmd.building) ?? refuse("INVALID_TARGET", `no building ${cmd.building}`);
+      if (cmd.power !== undefined) b.power = cmd.power;
+      if (cmd.damaged !== undefined) b.damaged = cmd.damaged;
+      emit(ctx, "truth.changed", { building: b.id }, cause);
+      observe(ctx, cause);
       return;
     }
-    case "unit.assign": {
-      const unit = unitFor(ctx, cmd.unit);
-      if (unit.role !== "resident") refuse("PRECONDITION_FAILED", "only residents take workplaces");
-      if (cmd.building === null) {
-        setWorkplace(unit, null);
-        return;
-      }
-      const building =
-        buildingById(ctx.s, cmd.building) ?? refuse("INVALID_TARGET", `no building ${cmd.building}`);
-      const slots = lookup(ctx.ix.buildings, building.type, "building").workers;
-      if (!building.complete || slots === 0)
-        refuse("PRECONDITION_FAILED", `${building.id} has no work places`);
-      if (unit.workplace !== building.id && workersAt(ctx.s, building.id) >= slots) {
-        refuse("PRECONDITION_FAILED", `${building.id} is full`);
-      }
-      setWorkplace(unit, building.id);
+    case "debug.record":
+      if (!findBuilding(s, cmd.building)) refuse("INVALID_TARGET", `no building ${cmd.building}`);
+      setRecord(s, cmd.building, { known: cmd.known, power: cmd.power, damaged: cmd.damaged });
+      emit(ctx, "record.changed", { building: cmd.building }, cause);
       return;
-    }
-    case "build.place": {
-      const [x, y] = cmd.at;
-      const problem = placementProblem(ctx, cmd.building, x, y);
-      if (problem) refuse(problem.code, problem.reason);
-      takeStock(ctx.s, lookup(ctx.ix.buildings, cmd.building, "building").cost);
-      const site = placeBuilding(ctx, cmd.building, x, y, false, null);
-      site.placedBy = emit(ctx, "site.placed", { building: site.id, type: cmd.building }, cause).id;
-      return;
-    }
   }
 }

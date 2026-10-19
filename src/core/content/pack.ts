@@ -1,25 +1,37 @@
 // Assembles a scenario pack from already-parsed files: validates every file,
-// resolves `extends`, merges sections by id and checks cross-references and text.
+// resolves `extends`, merges sections by id and checks cross-references, the place graph and text.
 // Parsing (YAML, zip, fetch) happens outside src/core.
 import type { z } from "zod";
 import { pickLanguage } from "./language";
 import {
   type Building,
   Calendar,
+  type CaseType,
+  type District,
   EconomyParams,
   ENTITY_SECTION_NAMES,
   type EntitySection,
   type GameEvent,
+  type Institution,
+  type Landmark,
+  type Layer,
   LocaleTable,
-  type MapDef,
   PackFile,
+  Params,
+  type Part,
+  type Passage,
+  type Prop,
+  RecordField,
+  type Recipe,
+  type Resident,
   type Resource,
-  type ResourceNode,
+  type Routine,
   ScenarioManifest,
-  type Start,
-  type Terrain,
-  type UnitType,
-  type Weather,
+  type Scene,
+  type Spot,
+  Start,
+  type StylePack,
+  WindowPlace,
 } from "./schema";
 
 export interface RawPack {
@@ -39,15 +51,26 @@ export interface Pack {
   /** Languages with complete text; the first is the fallback. */
   languages: string[];
   resources: Resource[];
-  terrain: Terrain[];
-  nodes: ResourceNode[];
+  districts: District[];
+  scenes: Scene[];
+  layers: Layer[];
+  passages: Passage[];
+  spots: Spot[];
   buildings: Building[];
-  units: UnitType[];
-  weathers: Weather[];
+  props: Prop[];
+  routines: Routine[];
+  residents: Resident[];
+  institutions: Institution[];
+  cases: CaseType[];
   events: GameEvent[];
+  styles: StylePack[];
+  recipes: Recipe[];
+  parts: Part[];
+  landmarks: Landmark[];
   calendar: Calendar;
-  map: MapDef;
   start: Start;
+  window: WindowPlace;
+  params: Params;
   economy: EconomyParams;
   locale: Record<string, LocaleTable>;
 }
@@ -135,13 +158,14 @@ export function assemblePack(
   const sections = new Map<EntitySection, Map<string, Entity>>(
     ENTITY_SECTION_NAMES.map((name) => [
       name,
-      new Map((parent?.[name] ?? []).map((e: Entity) => [e.id, e] as [string, Entity])),
+      new Map(((parent?.[name] ?? []) as Entity[]).map((e) => [e.id, e] as [string, Entity])),
     ]),
   );
   const definedHere = new Map<string, string>(); // "section:id" -> file
   let calendar: Partial<Calendar> | undefined = parent?.calendar;
-  let map: MapDef | undefined = parent?.map;
   let start: Start | undefined = parent?.start;
+  let windowPlace: WindowPlace | undefined = parent?.window;
+  let params: Partial<Params> = { ...(parent?.params ?? {}) };
   let economy: Partial<EconomyParams> = { ...(parent?.economy ?? {}) };
 
   for (const file of raw.files) {
@@ -180,8 +204,9 @@ export function assemblePack(
       }
     }
     if (data.calendar) calendar = { ...calendar, ...data.calendar };
-    if (data.map) map = data.map;
     if (data.start) start = data.start;
+    if (data.window) windowPlace = data.window;
+    if (data.params) params = { ...params, ...data.params };
     if (data.economy) {
       economy = {
         ...economy,
@@ -202,122 +227,229 @@ export function assemblePack(
 
   const list = <T>(name: EntitySection) => [...sections.get(name)!.values()] as T[];
   const fileOf = (name: EntitySection, id: string) => definedHere.get(`${name}:${id}`) ?? "(parent)";
+  const has = (name: EntitySection, id: string) => sections.get(name)!.has(id);
   const need = (file: string, path: string, name: EntitySection, id: string) => {
-    if (!sections.get(name)!.has(id)) issues.push({ file, path, message: `unknown ${name} "${id}"` });
+    if (!has(name, id)) issues.push({ file, path, message: `unknown ${name} "${id}"` });
   };
 
   const fullEconomy = EconomyParams.safeParse(economy);
   if (!fullEconomy.success) issues.push(...zodIssues(`${raw.origin} (merged economy)`, fullEconomy.error));
   const fullCalendar = Calendar.safeParse(calendar ?? {});
   if (!fullCalendar.success) issues.push(...zodIssues(`${raw.origin} (merged calendar)`, fullCalendar.error));
-  if (!map) issues.push({ file: raw.origin, path: "map", message: "the pack has no map" });
+  const fullParams = Params.safeParse(params);
+  if (!fullParams.success) issues.push(...zodIssues(`${raw.origin} (merged params)`, fullParams.error));
   if (!start) issues.push({ file: raw.origin, path: "start", message: "the pack has no start" });
+  if (!windowPlace) issues.push({ file: raw.origin, path: "window", message: "the pack has no window" });
 
-  // Cross-references between entities.
-  for (const n of list<ResourceNode>("nodes")) {
-    need(fileOf("nodes", n.id), `${n.id}.yields`, "resources", n.yields);
+  // ---- cross-references ------------------------------------------------------------------------
+  const layers = new Map(list<Layer>("layers").map((l) => [l.id, l]));
+  const walkLayer = (file: string, path: string, id: string, x?: number) => {
+    const layer = layers.get(id);
+    if (!layer) return issues.push({ file, path, message: `unknown layers "${id}"` });
+    if (layer.kind !== "walk" || !layer.walk) {
+      return issues.push({ file, path, message: `"${id}" is not a layer anyone can walk on` });
+    }
+    if (x !== undefined && (x < layer.walk[0] || x > layer.walk[1])) {
+      issues.push({
+        file,
+        path,
+        message: `x=${x} is outside ${id}'s walkable stretch [${layer.walk.join(", ")}]`,
+      });
+    }
+  };
+
+  for (const d of list<District>("districts"))
+    need(fileOf("districts", d.id), `${d.id}.style`, "styles", d.style);
+  for (const s of list<Scene>("scenes")) {
+    const file = fileOf("scenes", s.id);
+    need(file, `${s.id}.district`, "districts", s.district);
+    if (s.backdrop) need(file, `${s.id}.backdrop`, "landmarks", s.backdrop);
+    s.grounds.forEach((g, i) => {
+      if (layers.get(g.layer)?.scene !== s.id)
+        issues.push({
+          file,
+          path: `${s.id}.grounds.${i}.layer`,
+          message: `"${g.layer}" is not a layer of ${s.id}`,
+        });
+      if (g.far >= g.near)
+        issues.push({
+          file,
+          path: `${s.id}.grounds.${i}`,
+          message: "a ground strip runs from near to a smaller far",
+        });
+    });
+    const walkable = list<Layer>("layers").filter((l) => l.scene === s.id && l.kind === "walk");
+    if (walkable.length === 0) issues.push({ file, path: s.id, message: "a scene needs a layer to walk on" });
+    if (s.kind === "interior" && walkable.length !== 1)
+      issues.push({ file, path: s.id, message: "an interior has exactly one layer to walk on" });
   }
-  for (const b of list<Building>("buildings")) {
-    for (const field of ["cost", "produces", "consumes"] as const) {
-      for (const res of Object.keys(b[field] ?? {})) {
-        need(fileOf("buildings", b.id), `${b.id}.${field}`, "resources", res);
-      }
+  for (const l of layers.values()) {
+    const file = fileOf("layers", l.id);
+    need(file, `${l.id}.scene`, "scenes", l.scene);
+    if (l.kind === "walk" && !l.walk)
+      issues.push({ file, path: `${l.id}.walk`, message: "a walk layer needs walk: [min, max]" });
+    if (l.skyline) {
+      need(file, `${l.id}.skyline.recipe`, "recipes", l.skyline.recipe);
+      need(file, `${l.id}.skyline.style`, "styles", l.skyline.style);
     }
   }
-  for (const w of list<Weather>("weathers")) {
-    for (const res of Object.keys(w.produce_bonus)) {
-      need(fileOf("weathers", w.id), `${w.id}.produce_bonus`, "resources", res);
+  for (const p of list<Passage>("passages")) {
+    const file = fileOf("passages", p.id);
+    walkLayer(file, `${p.id}.from`, p.from.layer, p.from.x);
+    walkLayer(file, `${p.id}.to`, p.to.layer, p.to.x);
+    if (p.from.layer === p.to.layer)
+      issues.push({ file, path: p.id, message: "a passage joins two different layers" });
+  }
+  for (const s of list<Spot>("spots")) walkLayer(fileOf("spots", s.id), `${s.id}.layer`, s.layer, s.x);
+
+  const buildings = list<Building>("buildings");
+  for (const b of buildings) {
+    const file = fileOf("buildings", b.id);
+    walkLayer(file, `${b.id}.layer`, b.layer, b.x + Math.floor(b.width / 2));
+    if ("recipe" in b.look) {
+      need(file, `${b.id}.look.recipe`, "recipes", b.look.recipe);
+      if (b.look.style) need(file, `${b.id}.look.style`, "styles", b.look.style);
+      b.look.parts.forEach((p, i) => need(file, `${b.id}.look.parts.${i}`, "parts", p));
+    } else need(file, `${b.id}.look.landmark`, "landmarks", b.look.landmark);
+  }
+  // Lots on one layer never overlap, and an alley runs through a gap between two of them.
+  const byLayer = new Map<string, Building[]>();
+  for (const b of buildings) byLayer.set(b.layer, [...(byLayer.get(b.layer) ?? []), b]);
+  for (const row of byLayer.values()) {
+    row.sort((a, b) => a.x - b.x);
+    for (let i = 1; i < row.length; i++) {
+      const prev = row[i - 1]!;
+      const cur = row[i]!;
+      if (cur.x < prev.x + prev.width)
+        issues.push({
+          file: fileOf("buildings", cur.id),
+          path: `${cur.id}.x`,
+          message: `its lot overlaps ${prev.id}`,
+        });
     }
+  }
+  for (const p of list<Passage>("passages")) {
+    if (p.kind !== "alley") continue;
+    const inLot = (byLayer.get(p.from.layer) ?? []).find((b) => p.from.x >= b.x && p.from.x <= b.x + b.width);
+    if (inLot)
+      issues.push({
+        file: fileOf("passages", p.id),
+        path: `${p.id}.from.x`,
+        message: `an alley runs between buildings, not through ${inLot.id}`,
+      });
+  }
+  for (const p of list<Prop>("props")) {
+    const file = fileOf("props", p.id);
+    need(file, `${p.id}.layer`, "layers", p.layer);
+    need(file, `${p.id}.landmark`, "landmarks", p.landmark);
+  }
+  const placeIds = (go: string) => go === "home" || go === "work" || has("buildings", go) || has("spots", go);
+  for (const r of list<Routine>("routines")) {
+    const file = fileOf("routines", r.id);
+    r.steps.forEach((step, i) => {
+      if (!placeIds(step.go))
+        issues.push({
+          file,
+          path: `${r.id}.steps.${i}.go`,
+          message: `"${step.go}" is not home, work, a building or a spot`,
+        });
+      if (i > 0 && step.at <= r.steps[i - 1]!.at)
+        issues.push({
+          file,
+          path: `${r.id}.steps.${i}.at`,
+          message: "steps come in order of the time they start",
+        });
+    });
+  }
+  for (const r of list<Resident>("residents")) {
+    const file = fileOf("residents", r.id);
+    if (r.home) need(file, `${r.id}.home`, "buildings", r.home);
+    if (r.registered) need(file, `${r.id}.registered`, "buildings", r.registered);
+    if (!has("buildings", r.work) && !has("spots", r.work))
+      issues.push({ file, path: `${r.id}.work`, message: `"${r.work}" is not a building or a spot` });
+    need(file, `${r.id}.routine`, "routines", r.routine);
+  }
+  const institutions = list<Institution>("institutions");
+  for (const field of RecordField.options) {
+    const keepers = institutions.filter((i) => i.keeps.includes(field));
+    if (keepers.length !== 1) {
+      issues.push({
+        file: raw.origin,
+        path: "institutions",
+        message: `exactly one institution keeps "${field}" records (found ${keepers.length})`,
+      });
+    }
+  }
+  const kinds = new Map<string, string>();
+  for (const c of list<CaseType>("cases")) {
+    const other = kinds.get(c.kind);
+    if (other)
+      issues.push({
+        file: fileOf("cases", c.id),
+        path: `${c.id}.kind`,
+        message: `${other} already handles "${c.kind}"`,
+      });
+    kinds.set(c.kind, c.id);
   }
   for (const e of list<GameEvent>("events")) {
-    for (const w of e.trigger.weather_in ?? [])
-      need(fileOf("events", e.id), `${e.id}.trigger.weather_in`, "weathers", w);
+    const file = fileOf("events", e.id);
     e.effects.forEach((fx, i) => {
-      const file = fileOf("events", e.id);
       const path = `${e.id}.effects.${i}`;
-      if (fx.type === "add_resource") need(file, path, "resources", fx.resource);
-      if (fx.type === "set_weather") need(file, path, "weathers", fx.weather);
-      if (fx.type === "spawn_unit") need(file, path, "units", fx.unit);
-      if (fx.type === "node_bonus") need(file, path, "nodes", fx.node);
+      if ("building" in fx) need(file, `${path}.building`, "buildings", fx.building);
+      if ("person" in fx) need(file, `${path}.person`, "residents", fx.person);
     });
   }
+  for (const s of list<StylePack>("styles")) {
+    const file = fileOf("styles", s.id);
+    s.recipes.forEach((r, i) => need(file, `${s.id}.recipes.${i}.recipe`, "recipes", r.recipe));
+    for (const part of Object.keys(s.parts)) need(file, `${s.id}.parts`, "parts", part);
+  }
+  if (start) {
+    walkLayer(`${raw.origin} (start)`, "hero.layer", start.hero.layer, start.hero.x);
+  }
+  if (windowPlace) {
+    walkLayer(`${raw.origin} (window)`, "layer", windowPlace.layer, windowPlace.x);
+  }
 
-  // The map and the start position.
-  const terrainById = new Map(list<Terrain>("terrain").map((t) => [t.id, t]));
-  const terrainAt = (x: number, y: number): Terrain | undefined => {
-    const ch = map?.rows[y]?.[x];
-    const entry = ch === undefined ? undefined : map?.legend[ch];
-    return entry ? terrainById.get(entry.terrain) : undefined;
-  };
-  if (map) {
-    const mapFile = `${raw.origin} (map)`;
-    if (map.rows.length !== map.height) {
-      issues.push({
-        file: mapFile,
-        path: "rows",
-        message: `${map.rows.length} rows for height ${map.height}`,
-      });
-    }
-    map.rows.forEach((row, y) => {
-      const tiles = [...row];
-      if (tiles.length !== map.width) {
-        issues.push({
-          file: mapFile,
-          path: `rows.${y}`,
-          message: `${tiles.length} tiles for width ${map.width}`,
-        });
-      }
-      tiles.forEach((ch, x) => {
-        if (!map.legend[ch]) {
-          issues.push({
-            file: mapFile,
-            path: `rows.${y}`,
-            message: `"${ch}" at x=${x} is not in the legend`,
-          });
+  // ---- the place graph: every scene can be reached from the start, through passages -------------
+  if (start && layers.has(start.hero.layer)) {
+    const reached = new Set([start.hero.layer]);
+    const passages = list<Passage>("passages");
+    for (let grew = true; grew;) {
+      grew = false;
+      for (const p of passages) {
+        for (const [a, b] of [
+          [p.from.layer, p.to.layer],
+          [p.to.layer, p.from.layer],
+        ] as const) {
+          if (reached.has(a) && !reached.has(b)) {
+            reached.add(b);
+            grew = true;
+          }
         }
-      });
-    });
-    for (const [ch, entry] of Object.entries(map.legend)) {
-      need(mapFile, `legend.${ch}.terrain`, "terrain", entry.terrain);
-      if (entry.node) need(mapFile, `legend.${ch}.node`, "nodes", entry.node);
+      }
     }
-  }
-  if (start && map) {
-    const startFile = `${raw.origin} (start)`;
-    const inMap = (x: number, y: number) => x < map.width && y < map.height;
-    const unitTypes = new Map(list<UnitType>("units").map((u) => [u.id, u]));
-    let avatars = 0;
-    start.units.forEach((u, i) => {
-      need(startFile, `units.${i}.unit`, "units", u.unit);
-      if (unitTypes.get(u.unit)?.role === "avatar") avatars++;
-      const [x, y] = u.at;
-      if (!inMap(x, y) || !terrainAt(x, y)?.walkable) {
+    for (const s of list<Scene>("scenes")) {
+      const walkable = [...layers.values()].filter((l) => l.scene === s.id && l.kind === "walk");
+      if (walkable.length > 0 && !walkable.some((l) => reached.has(l.id))) {
         issues.push({
-          file: startFile,
-          path: `units.${i}.at`,
-          message: `(${x},${y}) is not a walkable tile`,
+          file: fileOf("scenes", s.id),
+          path: s.id,
+          message: `no passage leads to ${s.id} from the start`,
         });
       }
-    });
-    if (avatars !== 1) {
-      issues.push({
-        file: startFile,
-        path: "units",
-        message: `needs exactly one avatar unit, found ${avatars}`,
-      });
-    }
-    start.buildings.forEach((b, i) => {
-      need(startFile, `buildings.${i}.building`, "buildings", b.building);
-      const [x, y] = b.at;
-      if (!inMap(x, y) || !terrainAt(x, y)?.buildable) {
-        issues.push({ file: startFile, path: `buildings.${i}.at`, message: `(${x},${y}) is not buildable` });
+      for (const l of walkable) {
+        if (walkable.some((w) => reached.has(w.id)) && !reached.has(l.id))
+          issues.push({
+            file: fileOf("layers", l.id),
+            path: l.id,
+            message: `no passage leads to ${l.id} from the start`,
+          });
       }
-    });
-    for (const res of Object.keys(start.stock)) need(startFile, "stock", "resources", res);
-    need(startFile, "weather", "weathers", start.weather);
+    }
   }
 
-  // Languages and text.
+  // ---- languages and text ----------------------------------------------------------------------
   const languages = m.languages ?? parent?.languages;
   if (!languages) {
     issues.push({ file: manifestFile, path: "languages", message: "declare the languages this pack ships" });
@@ -360,7 +492,15 @@ export function assemblePack(
     }
   }
 
-  if (issues.length > 0 || !fullEconomy.success || !fullCalendar.success || !languages || !map || !start) {
+  if (
+    issues.length > 0 ||
+    !fullEconomy.success ||
+    !fullCalendar.success ||
+    !fullParams.success ||
+    !languages ||
+    !start ||
+    !windowPlace
+  ) {
     return { ok: false, issues };
   }
   return {
@@ -371,15 +511,26 @@ export function assemblePack(
       lineage: [...(parent?.lineage ?? []), m.id],
       languages,
       resources: list("resources"),
-      terrain: list("terrain"),
-      nodes: list("nodes"),
+      districts: list("districts"),
+      scenes: list("scenes"),
+      layers: list("layers"),
+      passages: list("passages"),
+      spots: list("spots"),
       buildings: list("buildings"),
-      units: list("units"),
-      weathers: list("weathers"),
+      props: list("props"),
+      routines: list("routines"),
+      residents: list("residents"),
+      institutions,
+      cases: list("cases"),
       events: list("events"),
+      styles: list("styles"),
+      recipes: list("recipes"),
+      parts: list("parts"),
+      landmarks: list("landmarks"),
       calendar: fullCalendar.data,
-      map,
-      start,
+      start: Start.parse(start),
+      window: WindowPlace.parse(windowPlace),
+      params: fullParams.data,
       economy: fullEconomy.data,
       locale,
     },
@@ -388,7 +539,7 @@ export function assemblePack(
 
 /** Every content id in a pack, for checks that need them all. */
 export function contentIds(pack: Pack): string[] {
-  return ENTITY_SECTION_NAMES.flatMap((name) => pack[name].map((e) => e.id));
+  return ENTITY_SECTION_NAMES.flatMap((name) => (pack[name] as Entity[]).map((e) => e.id));
 }
 
 /**

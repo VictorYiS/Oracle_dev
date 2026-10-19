@@ -1,10 +1,6 @@
+# The day starts a little further along the street.
 start:
-  units:
-    - { unit: unit.interpreter, at: [12, 12] }
-    - { unit: unit.wisp, at: [13, 12] }
-    - { unit: unit.resident, at: [12, 13] }
-  buildings:
-    - { building: bld.campfire, at: [12, 10] }
-  stock: { res.berry: 12, res.wood: 6 }
-  weather: weather.clear
-  base_storage: 40
+  hero:
+    layer: layer.street
+    x: 720
+    look: { coat: "#3f5a4c", hat: true }

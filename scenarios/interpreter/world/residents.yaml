@@ -1,0 +1,131 @@
+# The people of the East Bank. `home` is where they really live; `registered` (if given) is where
+# the registry has them, when that differs. Routines say where they go at what minute of the day.
+routines:
+  - id: routine.worker
+    steps:
+      - { at: 0, go: home }
+      - { at: 400, go: work }
+      - { at: 720, go: spot.market }
+      - { at: 780, go: work }
+      - { at: 1000, go: home }
+  - id: routine.trader
+    steps:
+      - { at: 0, go: home }
+      - { at: 380, go: work }
+      - { at: 1020, go: home }
+  - id: routine.homebody
+    steps:
+      - { at: 0, go: home }
+      - { at: 660, go: spot.market }
+      - { at: 760, go: home }
+
+residents:
+  - {
+      id: person.mara,
+      name: "@person.mara.name",
+      home: bld.eb_02,
+      work: spot.market,
+      routine: routine.trader,
+      look: { coat: "#7a3b2f" },
+    }
+  - {
+      id: person.ivo,
+      name: "@person.ivo.name",
+      home: bld.eb_02,
+      work: bld.works_1,
+      routine: routine.worker,
+      look: { coat: "#3f5a4c", hat: true },
+    }
+  - {
+      id: person.lena,
+      name: "@person.lena.name",
+      home: bld.eb_05,
+      work: spot.market,
+      routine: routine.trader,
+      look: { coat: "#8a7a4a" },
+    }
+  - {
+      id: person.osei,
+      name: "@person.osei.name",
+      home: bld.eb_07,
+      work: bld.works_1,
+      routine: routine.worker,
+      look: { coat: "#4b5470", hat: true },
+    }
+  - {
+      id: person.ruth,
+      name: "@person.ruth.name",
+      home: bld.eb_07,
+      work: spot.registry_desk,
+      routine: routine.worker,
+      look: { coat: "#6b4a3a" },
+    }
+  - {
+      id: person.yusuf,
+      name: "@person.yusuf.name",
+      home: bld.eb_17b,
+      registered: null,
+      work: bld.works_2,
+      routine: routine.worker,
+      look: { coat: "#2f353d", hat: true },
+    }
+  - {
+      id: person.mei,
+      name: "@person.mei.name",
+      home: bld.eb_17b,
+      registered: null,
+      work: bld.eb_17b,
+      routine: routine.homebody,
+      look: { coat: "#9b2a20" },
+    }
+  - {
+      id: person.anton,
+      name: "@person.anton.name",
+      home: bld.eb_10,
+      work: bld.works_2,
+      routine: routine.worker,
+      look: { coat: "#5b6470", hat: true },
+    }
+  - {
+      id: person.pavel,
+      name: "@person.pavel.name",
+      home: bld.eb_11,
+      registered: bld.eb_04,
+      work: bld.works_2,
+      routine: routine.worker,
+      look: { coat: "#55473a" },
+    }
+  - {
+      id: person.sofia,
+      name: "@person.sofia.name",
+      home: bld.eb_12,
+      work: spot.switch_room,
+      routine: routine.worker,
+      look: { coat: "#7d8f8c" },
+    }
+  - {
+      id: person.dima,
+      name: "@person.dima.name",
+      home: bld.eb_09,
+      work: bld.works_1,
+      routine: routine.worker,
+      look: { coat: "#a57c66", hat: true },
+    }
+  - {
+      id: person.hana,
+      name: "@person.hana.name",
+      home: bld.boathouse,
+      work: bld.boathouse,
+      routine: routine.homebody,
+      look: { coat: "#3f5a4c" },
+    }
+  # Not in town yet: arrives later in the story and moves into an empty house.
+  - {
+      id: person.kasia,
+      name: "@person.kasia.name",
+      home: null,
+      registered: null,
+      work: spot.market,
+      routine: routine.trader,
+      look: { coat: "#8a3b2f" },
+    }

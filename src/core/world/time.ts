@@ -1,16 +1,25 @@
 // The clock: ticks only pass during the day; the other phases wait for the player.
+import { tickCases } from "./cases";
+import { tickHero } from "./hero";
 import type { Ctx } from "./mutate";
+import { observe } from "./observe";
+import { tickResidents } from "./residents";
 import { dawn, dusk } from "./routines";
-import { tickUnits } from "./units";
+import type { Cause } from "./types";
+
+const DAY: Cause = { routine: "day" };
 
 /** Run up to `n` day ticks. Stops early at dusk. Returns the ticks actually run. */
 export function advanceTicks(ctx: Ctx, n: number): number {
   let done = 0;
   while (done < n && ctx.s.clock.phase === "day") {
-    tickUnits(ctx);
+    tickResidents(ctx);
+    tickCases(ctx);
+    tickHero(ctx);
     ctx.s.clock.minute++;
     ctx.s.clock.tick++;
     done++;
+    observe(ctx, DAY);
     if (ctx.s.clock.minute >= ctx.ix.dusk) {
       ctx.s.clock.phase = "dusk";
       dusk(ctx);

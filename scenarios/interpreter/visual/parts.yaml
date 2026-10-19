@@ -1,0 +1,12 @@
+# Parts hang off buildings by chance (see each style pack). Clutter is what the Oracle tidies away:
+# when it draws a place you have not seen, there is no laundry, no wiring, no posters and no cracks.
+parts:
+  - { id: part.pipes, name: "@part.pipes.name", draw: pipes, clutter: true }
+  - { id: part.laundry, name: "@part.laundry.name", draw: laundry, clutter: true }
+  - { id: part.posters, name: "@part.posters.name", draw: posters, clutter: true }
+  - { id: part.ladder, name: "@part.ladder.name", draw: ladder, clutter: true }
+  - { id: part.wires, name: "@part.wires.name", draw: wires, clutter: true }
+  - { id: part.awning, name: "@part.awning.name", draw: awning, clutter: false }
+  - { id: part.sign, name: "@part.sign.name", draw: sign, clutter: false }
+  - { id: part.balcony, name: "@part.balcony.name", draw: balcony, clutter: false }
+  - { id: part.cracks, name: "@part.cracks.name", draw: cracks, clutter: true, damaged_only: true }

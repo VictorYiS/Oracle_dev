@@ -10,10 +10,12 @@ import { hashState } from "../world/hash";
 import type { Ctx } from "../world/ctx";
 import { indexPack, type PackIndex } from "../world/pack-index";
 import { advanceTicks, ticksUntilDusk } from "../world/time";
-import type { EventView, WorldEvent, WorldState, WorldView } from "../world/types";
+import type { EventView, Phase, WorldEvent, WorldState, WorldView } from "../world/types";
+import { suggestionFor } from "../world/window";
+import type { Suggestion } from "../oracle/suggest";
 
 export const SAVE_FORMAT = "oracle-save";
-export const SAVE_VERSION = 1;
+export const SAVE_VERSION = 2;
 /** Events kept in a save; older ones can be rebuilt by replaying from the start if ever needed. */
 const SAVED_EVENTS = 500;
 /** Events kept in memory. The log is trimmed back to this once it reaches twice as many. */
@@ -105,12 +107,19 @@ export class Game {
     return ticksUntilDusk(this.ctx);
   }
 
+  /** The Oracle's suggestion for a case at the window (read-only: it reads the records). */
+  suggestion(caseId: string): Suggestion | null {
+    return suggestionFor(this.ctx, caseId);
+  }
+
   submit(command: unknown): CommandResult {
+    const before = this.ctx.s.clock.phase;
     const seq = this.nextSeq++;
     const tick = this.ctx.s.clock.tick;
     const result = busSubmit(this.ctx, command, seq);
     this.records.push({ seq, tick, command, result: result.ok ? "ok" : result.code });
-    this.trimLog();
+    // Some commands take time (a passage, waiting, reading an original) and may run into dusk.
+    this.afterTime(before);
     return result;
   }
 
@@ -118,6 +127,11 @@ export class Game {
   advance(ticks: number): number {
     const before = this.ctx.s.clock.phase;
     const done = advanceTicks(this.ctx, ticks);
+    this.afterTime(before);
+    return done;
+  }
+
+  private afterTime(before: Phase): void {
     if (before === "day" && this.ctx.s.clock.phase === "dusk") {
       this.hashes.push({ day: this.ctx.s.clock.day, hash: this.hash() });
       this.snap = {
@@ -128,7 +142,6 @@ export class Game {
       this.recordsAtSnap = this.records.length;
     }
     this.trimLog();
-    return done;
   }
 
   /** Advance until the clock reaches `tick` (or the day ends first). */

@@ -10,6 +10,10 @@ export interface OracleDebug {
   world(): unknown;
   advance(ticks: number): number;
   submit(command: Record<string, unknown>): CommandResult | null;
+  /** Submit a debug command (debug.truth, debug.record): changes the world behind everyone's back. */
+  debug(command: Record<string, unknown>): CommandResult | null;
+  /** The Oracle's suggestion for a case at the window. */
+  suggestion(caseId: string): unknown;
   /** Rebuild a game from a bundled pack and a command log; returns its daily and final hashes. */
   replay(
     packId: string,
@@ -21,8 +25,6 @@ export interface OracleDebug {
   newGame(seed: number): boolean;
   /** Event kinds and data so far, oldest first. */
   events(): { id: number; day: number; kind: string; data: Record<string, unknown> }[];
-  /** Position of a tile's centre inside the map canvas, set by the map once it is drawn. */
-  tileToCanvas(x: number, y: number): { x: number; y: number } | null;
 }
 
 declare global {
@@ -31,18 +33,14 @@ declare global {
   }
 }
 
-let toCanvas: OracleDebug["tileToCanvas"] = () => null;
-
-export function setTileToCanvas(fn: OracleDebug["tileToCanvas"]): void {
-  toCanvas = fn;
-}
-
 export function installDebug(current: () => Session | null, newGame: (seed: number) => boolean): void {
   window.oracle = {
     hash: () => current()?.game.hash() ?? null,
     world: () => JSON.parse(JSON.stringify(current()?.world ?? null)) as unknown,
     advance: (ticks) => current()?.advance(ticks) ?? 0,
     submit: (command) => current()?.submit(command) ?? null,
+    debug: (command) => current()?.submitDebug(command) ?? null,
+    suggestion: (caseId) => JSON.parse(JSON.stringify(current()?.game.suggestion(caseId) ?? null)) as unknown,
     async replay(packId, seed, commands, finalTick) {
       const result = await loadBundledPack(packId);
       if (!result.ok) throw new Error(`pack ${packId} did not load`);
@@ -59,6 +57,5 @@ export function installDebug(current: () => Session | null, newGame: (seed: numb
         kind: e.kind,
         data: { ...e.data },
       })),
-    tileToCanvas: (x, y) => toCanvas(x, y),
   };
 }

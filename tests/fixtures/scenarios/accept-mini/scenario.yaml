@@ -1,7 +1,7 @@
-# Test fixture (P1 acceptance A15): extends the default pack, replaces the map and the start,
-# and overrides one resource. Loading and playing it must need no engine change.
+# Test fixture (P2 acceptance A15): extends the default pack, takes three houses off the far
+# bank and repaints one style pack. Loading and playing it must need no engine change.
 id: accept-mini
-version: 0.1.0
+version: 0.2.0
 engine: "0"
 extends: interpreter
 title: "@mini.title"

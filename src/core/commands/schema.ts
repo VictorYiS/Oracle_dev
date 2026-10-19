@@ -1,14 +1,12 @@
-// Every way to change the world, as data. Manual play, rules (P2) and the Oracle (P3+) all
-// submit these same commands through the bus.
+// Every way to change the world, as data. The player, the debug hook (and later rules and the
+// Oracle) all submit these same commands through the bus.
 import { z } from "zod";
 import { ContentId } from "../content/schema";
 
-export const CommandSource = z.enum(["manual", "script", "oracle"]);
+export const CommandSource = z.enum(["manual", "script", "oracle", "debug"]);
 export type CommandSource = z.infer<typeof CommandSource>;
 
-const Tile = z.tuple([z.number().int(), z.number().int()]);
-const UnitId = z.string().regex(/^u\d+$/);
-const BuildingId = z.string().regex(/^b\d+$/);
+const CaseId = z.string().regex(/^c\d+$/);
 const base = {
   source: CommandSource.default("manual"),
   /**
@@ -20,37 +18,68 @@ const base = {
 
 export const Command = z.discriminatedUnion("type", [
   z.object({ type: z.literal("phase.advance"), ...base }).strict(),
-  z.object({ type: z.literal("unit.move"), unit: UnitId, to: Tile, ...base }).strict(),
-  z.object({ type: z.literal("unit.gather"), unit: UnitId, at: Tile, ...base }).strict(),
-  z.object({ type: z.literal("unit.build"), unit: UnitId, site: BuildingId, ...base }).strict(),
-  z.object({ type: z.literal("unit.stop"), unit: UnitId, ...base }).strict(),
+  /** Walk along the current layer to x (to where you stand, to stop). */
+  z.object({ type: z.literal("hero.walk"), to: z.number().int(), ...base }).strict(),
+  /** Take a passage from the end you are standing at. Takes game time. */
+  z.object({ type: z.literal("hero.cross"), passage: ContentId, ...base }).strict(),
+  /** Let the time pass, up to dusk. */
+  z.object({ type: z.literal("hero.wait"), minutes: z.number().int().min(1).max(1440), ...base }).strict(),
+  /** Decide a case at the window yourself. */
   z
-    .object({ type: z.literal("unit.assign"), unit: UnitId, building: BuildingId.nullable(), ...base })
+    .object({ type: z.literal("case.decide"), case: CaseId, action: z.enum(["approve", "deny"]), ...base })
     .strict(),
-  z.object({ type: z.literal("build.place"), building: ContentId, at: Tile, ...base }).strict(),
+  /** Do what the Oracle suggests for a case; what it took for granted goes on the pending tray. */
+  z.object({ type: z.literal("case.adopt"), case: CaseId, ...base }).strict(),
+  /** Have the original papers behind a pending item fetched and read. Takes game time. */
+  z.object({ type: z.literal("pending.read"), item: z.number().int().min(1), ...base }).strict(),
+  /** Change the truth about a building behind everyone's back (tests and curious players). */
+  z
+    .object({
+      type: z.literal("debug.truth"),
+      building: ContentId,
+      power: z.boolean().optional(),
+      damaged: z.boolean().optional(),
+      ...base,
+    })
+    .strict(),
+  /** Change a building's records without changing the building. */
+  z
+    .object({
+      type: z.literal("debug.record"),
+      building: ContentId,
+      known: z.boolean().optional(),
+      power: z.boolean().optional(),
+      damaged: z.boolean().optional(),
+      ...base,
+    })
+    .strict(),
 ]);
 export type Command = z.infer<typeof Command>;
 export type CommandType = Command["type"];
 
 export const COMMAND_TYPES: CommandType[] = [
   "phase.advance",
-  "unit.move",
-  "unit.gather",
-  "unit.build",
-  "unit.stop",
-  "unit.assign",
-  "build.place",
+  "hero.walk",
+  "hero.cross",
+  "hero.wait",
+  "case.decide",
+  "case.adopt",
+  "pending.read",
+  "debug.truth",
+  "debug.record",
 ];
 
-/** Which sources may issue which commands. Rules may direct units but not spend or end the day. */
+/** Which sources may issue which commands. */
 export const PERMISSIONS: Record<CommandType, CommandSource[]> = {
   "phase.advance": ["manual"],
-  "build.place": ["manual"],
-  "unit.move": ["manual", "script"],
-  "unit.gather": ["manual", "script"],
-  "unit.build": ["manual", "script"],
-  "unit.stop": ["manual", "script"],
-  "unit.assign": ["manual", "script"],
+  "hero.walk": ["manual"],
+  "hero.cross": ["manual"],
+  "hero.wait": ["manual"],
+  "case.decide": ["manual"],
+  "case.adopt": ["manual"],
+  "pending.read": ["manual"],
+  "debug.truth": ["debug"],
+  "debug.record": ["debug"],
 };
 
 export const REJECTIONS = [

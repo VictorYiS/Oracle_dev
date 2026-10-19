@@ -1,11 +1,11 @@
-// npm run check:neutral — fail if engine code (core, ui, providers) mentions scenario content.
+// npm run check:neutral — fail if engine code (core, ui, render, providers) mentions scenario content.
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import { join, relative, sep } from "node:path";
 import { findViolations, forbiddenTerms } from "./lib/neutral";
 import { listPackIds, loadPack } from "./lib/read-pack";
 
 const ROOT = join(import.meta.dirname, "..");
-const ENGINE_DIRS = ["src/core", "src/ui", "src/oracle-providers"];
+const ENGINE_DIRS = ["src/core", "src/ui", "src/render", "src/oracle-providers"];
 
 function sources(dir: string): string[] {
   try {

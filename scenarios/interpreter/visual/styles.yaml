@@ -1,0 +1,82 @@
+# Style packs: how each district's buildings are inked. Stroke, wobble and hatch set the hand;
+# palettes and patches the colours; recipes (with weights) which shapes appear; parts (with
+# chances) what hangs off them. The Oracle draws every building clean and glowing whatever its
+# style pack says: these only matter for what you see with your own eyes.
+styles:
+  - id: style.quay
+    name: "@style.quay.name"
+    stroke: 2.4
+    rough: 1
+    hatch: 0.5
+    palettes:
+      - { body: "#8b9298", roof: "#4f565d", door: "#3b3430", trim: "#d9cfb8" }
+      - { body: "#b39b72", roof: "#6b5137", door: "#3d2f25", trim: "#e6dcc4" }
+      - { body: "#7d8f8c", roof: "#41504f", door: "#2e3534", trim: "#d6d0bd" }
+      - { body: "#a57c66", roof: "#5c3b31", door: "#352620", trim: "#e1d5bf" }
+      - { body: "#9a958a", roof: "#575249", door: "#2f2b27", trim: "#ddd4c0" }
+      - { body: "#87907a", roof: "#4b5143", door: "#2f3229", trim: "#dcd6c1" }
+    patches: ["#9a8c6c", "#7d8f8c", "#a57c66", "#8b9298", "#b39b72", "#87907a"]
+    recipes: [{ recipe: recipe.row_house, weight: 1 }]
+    parts:
+      part.awning: 0.45
+      part.sign: 0.55
+      part.balcony: 0.4
+      part.pipes: 0.12
+      part.laundry: 0.22
+      part.posters: 0.3
+      part.wires: 0.1
+      part.cracks: 1
+
+  - id: style.works
+    name: "@style.works.name"
+    stroke: 2.9
+    rough: 1.35
+    hatch: 0.75
+    palettes:
+      - { body: "#77716a", roof: "#3e3a36", door: "#2a2724", trim: "#b9ae98" }
+      - { body: "#8f6049", roof: "#4a3026", door: "#2e211b", trim: "#cdb8a0" }
+      - { body: "#66737a", roof: "#353d41", door: "#23292c", trim: "#b8b6aa" }
+      - { body: "#9a7f62", roof: "#51402f", door: "#2f261d", trim: "#d3c3a6" }
+    patches: ["#77716a", "#8f6049", "#66737a", "#9a7f62"]
+    recipes: [{ recipe: recipe.works, weight: 0.75 }, { recipe: recipe.row_house, weight: 0.25 }]
+    parts:
+      part.awning: 0.08
+      part.sign: 0.45
+      part.balcony: 0.05
+      part.pipes: 0.85
+      part.laundry: 0.05
+      part.posters: 0.45
+      part.ladder: 0.5
+      part.wires: 0.3
+      part.cracks: 1
+
+  - id: style.shanty
+    name: "@style.shanty.name"
+    stroke: 2.2
+    rough: 1.9
+    hatch: 0.3
+    palettes:
+      - { body: "#9a8c6c", roof: "#5a5148", door: "#2f2b27", trim: "#d9cfb8" }
+    patches:
+      ["#9a8c6c", "#7d8f8c", "#a57c66", "#8b9298", "#b39b72", "#87907a", "#6f7a74", "#a39e8f", "#7f6d5c"]
+    recipes: [{ recipe: recipe.stack, weight: 1 }]
+    parts:
+      part.awning: 0.2
+      part.sign: 0.2
+      part.pipes: 0.3
+      part.laundry: 0.75
+      part.posters: 0.5
+      part.ladder: 0.45
+      part.wires: 0.8
+      part.cracks: 1
+
+  - id: style.spire
+    name: "@style.spire.name"
+    stroke: 3
+    rough: 1.4
+    hatch: 0.4
+    palettes:
+      - { body: "#8b9298", roof: "#4f565d", door: "#3b3430", trim: "#d9cfb8" }
+      - { body: "#7d8f8c", roof: "#41504f", door: "#2e3534", trim: "#d6d0bd" }
+    patches: ["#8b9298"]
+    recipes: [{ recipe: recipe.tower, weight: 1 }]

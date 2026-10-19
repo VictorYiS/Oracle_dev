@@ -1,0 +1,17 @@
+# The old quay, repainted in one colour scheme.
+styles:
+  - id: style.quay
+    name: "@mini.style.name"
+    stroke: 2.4
+    rough: 1
+    hatch: 0.5
+    palettes:
+      - { body: "#6a8caf", roof: "#2f4a66", door: "#1f2f40", trim: "#e8eef5" }
+    patches: ["#6a8caf", "#8aa7c4"]
+    recipes: [{ recipe: recipe.row_house, weight: 1 }]
+    parts:
+      part.awning: 0.45
+      part.sign: 0.55
+      part.balcony: 0.4
+      part.laundry: 0.22
+      part.cracks: 1

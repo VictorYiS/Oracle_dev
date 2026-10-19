@@ -1,5 +1,5 @@
 // P1 acceptance A15 (end-to-end part): import a scenario pack from a .zip; a broken pack shows
-// which file and which field are wrong.
+// which file and which field are wrong. (P2: accept-mini takes three houses off the far bank.)
 import { readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { join, relative, sep } from "node:path";
 import { expect, test } from "@playwright/test";
@@ -30,7 +30,9 @@ test("import a pack from a .zip and play it", async ({ page }, info) => {
   await page.getByTestId("import-zip").setInputFiles(zip);
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Mini Hush");
   await newGameFromTitle(page);
-  expect((await world(page)).width).toBe(24);
+  expect((await world(page)).buildings).toHaveLength(16);
+  await expect(page.locator("[data-building]:not([data-face])")).toHaveCount(16);
+  await expect(page.locator('[data-building="bld.eb_06"]')).toHaveCount(0);
 });
 
 test("a broken pack shows the file and the field", async ({ page }, info) => {

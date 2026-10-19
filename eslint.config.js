@@ -79,17 +79,30 @@ export default tseslint.config(
   {
     // Write boundary: outside the simulation core, the world changes only through commands.
     // (Inside src/core the same boundary is held by tests/architecture/write-boundary.test.ts.)
-    files: ["src/ui/**/*.{ts,tsx}", "src/app/**/*.ts", "src/oracle-providers/**/*.ts", "tools/**/*.ts"],
+    files: [
+      "src/ui/**/*.{ts,tsx}",
+      "src/app/**/*.ts",
+      "src/render/**/*.ts",
+      "src/oracle-providers/**/*.ts",
+      "tools/**/*.ts",
+    ],
     rules: {
       "no-restricted-imports": [
         "error",
         {
           patterns: [
             {
-              group: ["mutate", "time", "routines", "units", "create"].flatMap((name) => [
-                `**/world/${name}`,
-                `**/world/${name}.ts`,
-              ]),
+              group: [
+                "mutate",
+                "time",
+                "routines",
+                "units",
+                "create",
+                "residents",
+                "hero",
+                "observe",
+                "cases",
+              ].flatMap((name) => [`**/world/${name}`, `**/world/${name}.ts`]),
               message:
                 "Only the world's own systems, the command bus and the game facade change state. Submit a command.",
             },

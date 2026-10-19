@@ -1,8 +1,9 @@
-// P1 acceptance A9 (unit part): snapshot + command log reproduce the world exactly.
+// P1 acceptance A9 (unit part): snapshot + command log reproduce the world exactly. P2: the save
+// carries the player's memory (what they saw, and when) and the pending tray.
 import { describe, expect, it } from "vitest";
 import { Game, SaveError } from "../../src/core/game/game";
 import { playBot } from "../../tools/lib/bot";
-import { defaultPack, newGame, packWith } from "../helpers/world";
+import { defaultPack, newGame, packWith, startDay, visit } from "../helpers/game";
 
 const roundTrip = <T>(v: T): T => JSON.parse(JSON.stringify(v)) as T;
 
@@ -48,7 +49,7 @@ describe("saves", () => {
   it("record the engine, the pack and the seed", () => {
     const g = newGame(13);
     const save = g.toSave();
-    expect(save).toMatchObject({ format: "oracle-save", version: 1, engine: "0", seed: 13 });
+    expect(save).toMatchObject({ format: "oracle-save", version: 2, engine: "0", seed: 13 });
     expect(save.pack).toEqual({
       id: "interpreter",
       version: g.pack.manifest.version,
@@ -81,7 +82,7 @@ describe("saves", () => {
     const pack = defaultPack();
     const save = roundTrip(newGame(3, pack).toSave());
     const edited = roundTrip(pack);
-    edited.buildings[0]!.build_ticks += 1;
+    edited.buildings[0]!.load += 1;
     let error: unknown;
     try {
       Game.fromSave(edited, save);
@@ -104,5 +105,28 @@ describe("saves", () => {
     }
     retold.languages = [...retold.languages].reverse();
     expect(() => Game.fromSave(retold, save)).not.toThrow();
+  });
+
+  it("keep the player's memory and the pending tray, and load them back unchanged", () => {
+    const pack = packWith([{ path: "all.yaml", data: { params: { cases_per_day: [20, 20] } } }]);
+    const g = newGame(4, pack);
+    startDay(g);
+    const c = g.world.cases.find((k) => k.building === "bld.eb_07")!;
+    for (let i = 0; i < 900 && g.world.cases.find((k) => k.id === c.id)!.status !== "waiting"; i++)
+      g.advance(1);
+    expect(g.submit({ type: "case.adopt", case: c.id }).ok).toBe(true);
+    visit(g, "bld.eb_08"); // seen today, from the bridge's landing; No. 7's check is still open
+    const save = roundTrip(g.toSave());
+    expect(save.snapshot.state.memory.length + save.commands.length).toBeGreaterThan(0);
+    const loaded = Game.fromSave(pack, save);
+    expect(loaded.world.memory).toEqual(g.world.memory);
+    expect(loaded.world.memory.find((m) => m.building === "bld.eb_08")).toMatchObject({
+      day: 1,
+      power: true,
+      occupied: false,
+    });
+    expect(loaded.world.pending).toEqual(g.world.pending);
+    expect(loaded.world.pending.items[0]).toMatchObject({ building: "bld.eb_07", verdict: null });
+    expect(loaded.hash()).toBe(g.hash());
   });
 });
