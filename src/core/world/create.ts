@@ -47,13 +47,11 @@ export function createWorld(ix: PackIndex, seed: number): { s: WorldState; log: 
         damaged: b.record.damaged ?? b.truth.damaged,
         updated: 0,
       })),
-      residents: [...pack.residents]
-        .sort(byId)
-        .map((r) => ({
-          id: r.id,
-          registered: r.registered === undefined ? r.home : r.registered,
-          updated: 0,
-        })),
+      residents: [...pack.residents].sort(byId).map((r) => ({
+        id: r.id,
+        registered: r.registered === undefined ? r.home : r.registered,
+        updated: 0,
+      })),
       orders: [],
     },
     memory: [],

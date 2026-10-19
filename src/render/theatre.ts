@@ -90,22 +90,42 @@ const fnv = (s: string) => {
   return h;
 };
 
-/** Put a drawing into an element: as live SVG, or once into a bitmap at `scale` pixels per unit. */
+/** Widest bitmap piece, in pixels: very wide textures are slow or refused on some GPUs. */
+const TILE_PX = 2048;
+
+/** Put a drawing into an element: as live SVG, or once into bitmaps at `scale` pixels per unit. */
 function place(el: HTMLElement, svg: string, w: number, h: number, bitmapScale: number | null): void {
   if (bitmapScale === null) {
     el.innerHTML = svg;
     return;
   }
-  const canvas = document.createElement("canvas");
-  canvas.width = Math.max(1, Math.ceil(w * bitmapScale));
-  canvas.height = Math.max(1, Math.ceil(h * bitmapScale));
-  canvas.style.width = `${f1(w)}px`;
-  canvas.style.height = `${f1(h)}px`;
-  canvas.className = "pt-bitmap";
+  const pxW = Math.max(1, Math.ceil(w * bitmapScale));
+  const pxH = Math.max(1, Math.ceil(h * bitmapScale));
+  const pieces = Math.ceil(pxW / TILE_PX);
+  const holder = document.createElement("div");
+  holder.className = "pt-bitmap";
+  holder.style.width = `${f1(w)}px`;
+  holder.style.height = `${f1(h)}px`;
+  const canvases: HTMLCanvasElement[] = [];
+  for (let i = 0; i < pieces; i++) {
+    const c = document.createElement("canvas");
+    c.width = Math.min(TILE_PX, pxW - i * TILE_PX);
+    c.height = pxH;
+    c.style.width = `${f1(c.width / bitmapScale)}px`;
+    c.style.height = `${f1(h)}px`;
+    canvases.push(c);
+    holder.appendChild(c);
+  }
   const img = new Image();
-  img.onload = () => canvas.getContext("2d")?.drawImage(img, 0, 0, canvas.width, canvas.height);
+  img.onload = () => {
+    canvases.forEach((c, i) =>
+      c
+        .getContext("2d")
+        ?.drawImage(img, (i * TILE_PX) / bitmapScale, 0, c.width / bitmapScale, h, 0, 0, c.width, c.height),
+    );
+  };
   img.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
-  el.replaceChildren(canvas);
+  el.replaceChildren(holder);
 }
 
 /** Visual durations, in ms. */
@@ -492,16 +512,21 @@ export class Theatre {
     return el;
   }
 
+  /**
+   * Stand a figure on a layer. Figures are planes of their own in the 3D world rather than part of
+   * a layer's card: a walking figure then never makes the browser redraw the whole layer.
+   */
   private putFigure(el: HTMLElement, layer: string, x: number): void {
-    const container = this.layerEls.get(layer);
-    if (!container) return;
-    if (el.parentElement !== container) {
-      el.style.transform = "";
-      container.appendChild(el);
-    }
-    el.style.left = "0px";
-    el.style.top = `${GROUND - 150}px`;
-    el.style.transform = `translateX(${f1(x - 32)}px)`;
+    const l = this.ix.layers.get(layer);
+    if (!l) return;
+    if (el.parentElement !== this.world) this.world.appendChild(el);
+    const at = (this.anchors.get(layer) ?? 0) + x - 32;
+    const transform = `translate3d(${f1(at)}px,${GROUND - 150}px,${l.depth}px)`;
+    if (el.style.transform !== transform) el.style.transform = transform;
+    const shown = this.shownGroups.has(layer);
+    if (el.classList.contains("pt-gone") === shown) el.classList.toggle("pt-gone", !shown);
+    el.dataset.layer = layer;
+    el.dataset.x = String(Math.round(x));
   }
 
   // ---- painting ------------------------------------------------------------------------------
@@ -714,6 +739,7 @@ export class Theatre {
     }
     this.viewport.dataset.at = this.heroLayer;
     this.viewport.dataset.focus = this.focus;
+    this.refreshFigures();
   }
 
   /**
@@ -736,6 +762,15 @@ export class Theatre {
         c.out = out;
         for (const el of c.els) el.classList.toggle("pt-culled", out);
       }
+    }
+  }
+
+  /** Figures show and hide with the layer they stand on. */
+  private refreshFigures(): void {
+    for (const el of [this.hero, ...[...this.figures.values()].map((f) => f.el)]) {
+      const layer = el?.dataset.layer;
+      if (!layer || el.parentElement !== this.world || el.getAnimations().length > 0) continue;
+      el.classList.toggle("pt-gone", !this.shownGroups.has(layer));
     }
   }
 
@@ -763,12 +798,14 @@ export class Theatre {
     }
     this.viewport.dataset.at = this.heroLayer;
     this.viewport.dataset.focus = this.focus;
+    this.refreshFigures();
     const arriving = [...after].filter((g) => !before.has(g));
     const reveal = () => {
       for (const key of arriving) {
         for (const el of this.groups.get(key) ?? []) el.classList.remove("pt-off", "pt-gone");
         this.shownGroups.add(key);
       }
+      this.refreshFigures();
     };
     if (this.opts.reduceMotion || ms <= 0) reveal();
     else setTimeout(reveal, ms * 0.45);
@@ -825,10 +862,8 @@ export class Theatre {
       const fromX = from.x - 32;
       const toX = x - 32;
       const top = GROUND - 150;
-      this.world.appendChild(this.hero);
-      this.hero.style.left = "0px";
-      this.hero.style.top = "0px";
       this.hero.style.opacity = "1";
+      this.hero.classList.remove("pt-gone");
       const walk = this.hero.animate(
         [
           { transform: `translate3d(${fromX}px,${top}px,${fromLayer.depth}px)` },

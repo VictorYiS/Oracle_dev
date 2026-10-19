@@ -11,12 +11,14 @@ const MAX_MS = 100;
 
 async function recordFrames(page: Page, act: () => Promise<void>): Promise<number[]> {
   await page.evaluate(() => {
-    const w = window as unknown as { __frames: number[]; __recording: boolean };
+    const w = window as unknown as { __frames: number[]; __recording: boolean; __run: number };
     w.__frames = [];
     w.__recording = true;
+    // A new number for each recording, so a loop left from the last one stops at its next frame.
+    const run = (w.__run = (w.__run ?? 0) + 1);
     let last = performance.now();
     const step = (now: number) => {
-      if (!w.__recording) return;
+      if (!w.__recording || w.__run !== run) return;
       w.__frames.push(now - last);
       last = now;
       requestAnimationFrame(step);

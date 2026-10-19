@@ -47,15 +47,16 @@ export function TopBar(props: Props) {
         ))}
       </div>
 
-      <button
-        type="button"
-        class="primary"
-        data-testid="advance"
-        disabled={phase === "day"}
-        onClick={() => session.submit({ type: "phase.advance" })}
-      >
-        {m.advance[phase]}
-      </button>
+      {phase !== "day" && (
+        <button
+          type="button"
+          class="primary"
+          data-testid="advance"
+          onClick={() => session.submit({ type: "phase.advance" })}
+        >
+          {m.advance[phase]}
+        </button>
+      )}
       {phase === "day" && (
         <button
           type="button"

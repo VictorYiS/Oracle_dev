@@ -94,7 +94,8 @@ test.describe("the paper theatre", () => {
     await pause(page);
     const x1 = (await world(page)).hero.x;
     expect(x1).toBeGreaterThan(x0);
-    expect(await page.getByTestId("hero").evaluate((el) => el.style.transform)).toContain("translateX");
+    // ...and the theatre draws them there.
+    await expect(page.getByTestId("hero")).toHaveAttribute("data-x", String(x1));
 
     // ② The bridge: halfway through, the hero is between the two layers in depth; then on the far side.
     await walkTo(page, 2900);
@@ -104,10 +105,12 @@ test.describe("the paper theatre", () => {
     await settled(page);
     if (phone) await page.getByTestId("pad-use").click();
     else await page.keyboard.press("e");
+    // Sample the hero's depth from the key press until the crossing is over.
     const depths: number[] = [];
-    for (let i = 0; i < 14; i++) {
+    await expect(viewport(page)).toHaveAttribute("data-busy", "1");
+    for (let i = 0; i < 80 && (await viewport(page).getAttribute("data-busy")) === "1"; i++) {
       depths.push(await heroZ(page));
-      await page.waitForTimeout(90);
+      await page.waitForTimeout(60);
     }
     expect(
       depths.some((z) => z < -220 && z > -600),

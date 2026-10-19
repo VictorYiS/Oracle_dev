@@ -2,7 +2,7 @@
   "name": "oracle",
   "private": true,
   "version": "0.0.1",
-  "description": "Oracle — an agent-driven settlement & automation game where the AI is useful enough to make you stop seeing the world.",
+  "description": "Oracle — a narrative management game where the AI is useful enough to make you stop going to see for yourself.",
   "license": "MIT",
   "type": "module",
   "engines": {

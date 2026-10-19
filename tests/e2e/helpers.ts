@@ -102,9 +102,7 @@ export async function cameraOnHero(page: Page): Promise<void> {
   // First the theatre must draw the hero where the world has them (it catches up on its next frames).
   const x = (await world(page)).hero.x;
   await page.waitForFunction(
-    (at) =>
-      (document.querySelector('[data-testid="hero"]') as HTMLElement).style.transform ===
-      `translateX(${at - 32}px)`,
+    (at) => (document.querySelector('[data-testid="hero"]') as HTMLElement).dataset.x === String(at),
     x,
   );
   await page.waitForFunction(() => {

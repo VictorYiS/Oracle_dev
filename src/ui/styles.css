@@ -899,8 +899,13 @@ kbd {
     bottom: 3.6rem;
   }
 
+  .feed li:nth-child(n + 4) {
+    display: none;
+  }
+
   .hint {
-    bottom: 7.5rem;
+    top: 5.2rem;
+    bottom: auto;
   }
 
   .tools {
