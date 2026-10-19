@@ -22,7 +22,8 @@ export const corePurityRules = {
           group: ["**/ui/**", "**/app/**", "**/oracle-providers/**"],
           message: "src/core must not import from ui/, app/ or oracle-providers/.",
         },
-        { group: ["node:*"], message: "src/core must not depend on Node APIs." },
+        // fs/promises, path/posix and the like (anchored: no slash in front, so ./path is not matched).
+        { group: ["node:*", "fs/*", "path/*"], message: "src/core must not depend on Node APIs." },
       ],
     },
   ],

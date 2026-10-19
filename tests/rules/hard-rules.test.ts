@@ -51,6 +51,12 @@ describe("hard rule 1: src/core stays headless", () => {
     expect(await lintCore(`import { join } from "node:path";\nexport const j = join;\n`)).toContain(
       "no-restricted-imports",
     );
+    expect(await lintCore(`import { readFile } from "fs/promises";\nexport const r = readFile;\n`)).toContain(
+      "no-restricted-imports",
+    );
+    expect(await lintCore(`import { join } from "path/posix";\nexport const j = join;\n`)).toContain(
+      "no-restricted-imports",
+    );
     expect(await lintCore(`import { findPath } from "../world/path";\nexport const f = findPath;\n`)).toEqual(
       [],
     );
