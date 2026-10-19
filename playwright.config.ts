@@ -16,6 +16,6 @@ export default defineConfig({
     { name: "chromium", use: { ...devices["Desktop Chrome"] } },
     // Firefox proves the simulation gives the same hashes in another engine.
     { name: "firefox", use: { ...devices["Desktop Firefox"] }, testMatch: /determinism\.spec\.ts/ },
-    { name: "phone", use: { ...devices["Pixel 7"] }, testMatch: /(smoke|manual-loop|i18n)\.spec\.ts/ },
+    { name: "phone", use: { ...devices["Pixel 7"] }, testMatch: /(smoke|manual-loop|i18n|layout)\.spec\.ts/ },
   ],
 });
