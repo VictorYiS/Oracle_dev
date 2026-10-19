@@ -3,7 +3,7 @@ import { useRef, useState } from "preact/hooks";
 import { SaveError } from "../../core/game/game";
 import { Session } from "../../app/session";
 import { useUi } from "../context";
-import type { Messages } from "../i18n";
+import type { Later, Messages } from "../i18n";
 import { amounts, nameOf, packText } from "./names";
 
 function Dialog(props: {
@@ -78,11 +78,14 @@ function download(name: string, text: string): void {
 
 export function SaveMenu(props: { session: Session; onLoaded(session: Session): void; onClose(): void }) {
   const { m } = useUi();
-  const [status, setStatus] = useState("");
+  // Which message to show, not its text: the menu can stay open while the language changes.
+  const [status, setStatus] = useState<Later | null>(null);
   const file = useRef<HTMLInputElement>(null);
   const { session } = props;
-  const errorText = (e: unknown) =>
-    e instanceof SaveError ? m.saveMenu.errors[e.code] : m.saveMenu.errors.NOT_A_SAVE;
+  const errorText =
+    (e: unknown): Later =>
+    (t) =>
+      e instanceof SaveError ? t.saveMenu.errors[e.code] : t.saveMenu.errors.NOT_A_SAVE;
 
   return (
     <Dialog title={m.saveMenu.title} onClose={props.onClose} closeLabel={m.saveMenu.close} testid="save-menu">
@@ -90,9 +93,11 @@ export function SaveMenu(props: { session: Session; onLoaded(session: Session): 
         <button
           type="button"
           data-testid="save-here"
-          onClick={async () =>
-            setStatus((await session.saveToBrowser()) ? m.saveMenu.saved : m.saveMenu.saveFailed)
-          }
+          onClick={async () => {
+            const ok = await session.saveToBrowser();
+            // A state setter calls a function argument, so the message picker is wrapped once.
+            setStatus(() => (t: Messages) => (ok ? t.saveMenu.saved : t.saveMenu.saveFailed));
+          }}
         >
           {m.saveMenu.saveHere}
         </button>
@@ -102,10 +107,10 @@ export function SaveMenu(props: { session: Session; onLoaded(session: Session): 
           onClick={async () => {
             try {
               const loaded = await Session.fromBrowser(session.pack);
-              if (!loaded) return setStatus(m.saveMenu.noSave);
+              if (!loaded) return setStatus(() => (t: Messages) => t.saveMenu.noSave);
               props.onLoaded(loaded);
             } catch (e) {
-              setStatus(errorText(e));
+              setStatus(() => errorText(e));
             }
           }}
         >
@@ -138,13 +143,13 @@ export function SaveMenu(props: { session: Session; onLoaded(session: Session): 
             try {
               props.onLoaded(Session.fromSave(session.pack, JSON.parse(await picked.text())));
             } catch (err) {
-              setStatus(errorText(err));
+              setStatus(() => errorText(err));
             }
           }}
         />
         {status && (
           <p role="status" data-testid="save-status">
-            {status}
+            {status(m)}
           </p>
         )}
       </div>

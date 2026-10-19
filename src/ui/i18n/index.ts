@@ -13,6 +13,13 @@ export function messages(lang: string): Messages {
   return UI_LANGUAGES[lang]?.messages ?? en;
 }
 
+/**
+ * A message to show later, picked from whatever language is current when it is shown. Keep
+ * these in state, never the finished string: a string stored in state stays in the language it
+ * was made in after the player switches.
+ */
+export type Later = (m: Messages) => string;
+
 /** Fill {placeholders}. Unknown placeholders stay visible so gaps show up in review. */
 export function fmt(template: string, vars: Record<string, string | number>): string {
   return template.replace(/\{(\w+)\}/g, (whole, key: string) => (key in vars ? String(vars[key]) : whole));

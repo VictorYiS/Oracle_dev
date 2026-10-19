@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "preact/hooks";
 import type { Session } from "../../app/session";
 import type { Speed } from "../../app/clock";
+import type { Rejection } from "../../core/commands/schema";
 import { nodeAt, placementProblem } from "../../core/world/query";
 import { useRevision, useUi } from "../context";
 import { fmt } from "../i18n";
@@ -26,20 +27,21 @@ export function GameScreen(props: Props) {
   const [selection, setSelection] = useState<Selection>(null);
   const [mode, setMode] = useState<Mode>(null);
   const [overlay, setOverlay] = useState<"build" | "save" | "help" | null>(null);
-  const [toast, setToast] = useState<string | null>(null);
+  const [toast, setToast] = useState<Rejection | null>(null);
   const map = useRef<MapApi | null>(null);
   const lastSpeed = useRef<Speed>(1);
   const w = session.world;
   const ix = session.game.ix;
 
-  // Refusals become a short message in the player's language.
+  // Refusals become a short message in the player's language. The code is kept, not the text,
+  // so switching language translates a toast on screen and never brings back an old one.
   useEffect(() => {
     const r = session.lastResult;
     if (!r || r.ok) return;
-    setToast(m.rejections[r.code]);
+    setToast(r.code);
     const timer = setTimeout(() => setToast(null), 3000);
     return () => clearTimeout(timer);
-  }, [session.lastResult, m]);
+  }, [session.lastResult]);
 
   // The same check the command bus makes, so the ghost never promises what the bus refuses.
   const canPlace = (building: string, x: number, y: number): boolean =>
@@ -184,7 +186,7 @@ export function GameScreen(props: Props) {
         )}
         {toast && (
           <div class="toast" role="alert" data-testid="toast">
-            {toast}
+            {m.rejections[toast]}
           </div>
         )}
         <div class="zoom">

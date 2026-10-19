@@ -10,7 +10,7 @@ import type { Pack, PackIssue } from "../core/content/pack";
 import { SaveError } from "../core/game/game";
 import { UiContext } from "./context";
 import { GameScreen } from "./game/GameScreen";
-import { messages } from "./i18n";
+import { type Later, type Messages, messages } from "./i18n";
 import { TitleScreen } from "./TitleScreen";
 
 type PackState =
@@ -26,7 +26,8 @@ export function App() {
   const [packState, setPackState] = useState<PackState>({ status: "loading" });
   const [importedFrom, setImportedFrom] = useState<string | null>(null);
   const [problems, setProblems] = useState<PackIssue[] | null>(null);
-  const [message, setMessage] = useState<string | null>(null);
+  // Which message, not its text: the title screen has a language switch.
+  const [message, setMessage] = useState<Later | null>(null);
   const [lang, setLangState] = useState(() => chooseLanguage(["en", "zh-CN"]));
   const [session, setSessionState] = useState<Session | null>(null);
   const [hasBrowserSave, setHasBrowserSave] = useState(false);
@@ -85,7 +86,10 @@ export function App() {
   }, [session]);
 
   const saveError = (e: unknown) =>
-    setMessage(e instanceof SaveError ? m.saveMenu.errors[e.code] : m.saveMenu.errors.NOT_A_SAVE);
+    setMessage(
+      () => (t: Messages) =>
+        e instanceof SaveError ? t.saveMenu.errors[e.code] : t.saveMenu.errors.NOT_A_SAVE,
+    );
 
   let screen;
   if (packState.status === "loading") {
@@ -116,13 +120,13 @@ export function App() {
         importedFrom={importedFrom}
         hasBrowserSave={hasBrowserSave}
         problems={problems}
-        message={message}
+        message={message?.(m) ?? null}
         onNewGame={() => setSession(Session.newGame(packState.pack, randomSeed()))}
         onContinue={async () => {
           try {
             const loaded = await Session.fromBrowser(packState.pack);
             if (loaded) setSession(loaded);
-            else setMessage(m.saveMenu.noSave);
+            else setMessage(() => (t: Messages) => t.saveMenu.noSave);
           } catch (e) {
             saveError(e);
           }
@@ -148,7 +152,7 @@ export function App() {
             setPackState({ status: "ok", pack: result.pack });
             setLangState(chooseLanguage(result.pack.languages));
           } catch {
-            setMessage(m.title.noManifest);
+            setMessage(() => (t: Messages) => t.title.noManifest);
           }
         }}
       />
