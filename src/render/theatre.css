@@ -70,6 +70,11 @@
   left: 0;
   bottom: 0;
 }
+.pt-bld[data-active="true"],
+.pt-side[data-active="true"] {
+  scale: 1 1.35;
+  transform-origin: 0 100%;
+}
 .pt-plane > .pt-face {
   top: 0;
 }
@@ -213,7 +218,10 @@
   overflow: hidden;
 }
 .pt-bitmap {
-  display: block;
+  display: flex;
+}
+.pt-bitmap canvas {
+  flex: none;
 }
 .pt-culled {
   visibility: hidden !important;

@@ -57,6 +57,7 @@ props:
       layer: layer.registry_hall,
       x: -380,
       landmark: landmark.shelves,
+      inspect: true,
       text: "@prop.archive.text",
     }
   - {
@@ -83,6 +84,7 @@ props:
       layer: layer.room_17b,
       x: -360,
       landmark: landmark.shelves,
+      inspect: true,
       text: "@prop.shelf_17b.text",
     }
 

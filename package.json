@@ -21,7 +21,7 @@
     "check": "npm run typecheck && npm run lint && npm run test && npm run check:neutral && npm run check:copy && npm run validate",
     "smoke": "tsx tools/smoke.ts",
     "econ": "tsx tools/econ-sim/run.ts",
-    "e2e": "playwright test --grep-invert @perf && playwright test --grep @perf --workers=1",
+    "e2e": "playwright test --grep-invert @perf --workers=2 && playwright test --grep @perf --workers=1 --output=test-results/perf",
     "check:copy": "tsx tools/check-ui-copy.ts",
     "determinism": "tsx tools/determinism.ts",
     "bench": "tsx tools/bench.ts",

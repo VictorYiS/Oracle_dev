@@ -12,6 +12,7 @@ interface Props {
   reduceMotion: boolean;
   onReady(theatre: Theatre | null): void;
   onHit(hit: Hit): void;
+  onViewChange(): void;
 }
 
 const WHEEL_LOCK_MS = 380;
@@ -39,25 +40,35 @@ export function TheatreView(props: Props) {
     const observer = new ResizeObserver(resize);
     observer.observe(el);
     let frame = 0;
+    let viewState = "";
     const loop = (now: number) => {
-      t.sync(session.world, session.frac, now);
+      t.sync(session.world, session.frac, now, session.revision);
+      const next = `${t.focus}:${t.looking}:${t.busy}:${t.canInspect}`;
+      if (next !== viewState) {
+        viewState = next;
+        latest.current.onViewChange();
+      }
       frame = requestAnimationFrame(loop);
     };
     frame = requestAnimationFrame(loop);
     let wheelLock = 0;
     const onWheel = (e: WheelEvent) => {
+      if (!t.canInspect && !t.looking) return;
       e.preventDefault();
       const now = performance.now();
       if (now < wheelLock || t.busy) return;
       wheelLock = now + WHEEL_LOCK_MS;
       if (e.deltaY < 0) {
-        const target = t.lookTargetAt(e.target as Element);
-        if (target && t.canLook(target)) void t.look(target);
-        else t.nudge();
+        const target = t.inspectionTarget();
+        if (target && t.canLook(target)) {
+          if (session.world.hero.target !== null)
+            session.submit({ type: "hero.walk", to: Math.round(t.heroDrawnX) });
+          void t.look(target);
+        }
       } else if (e.deltaY > 0) void t.pullBack();
     };
     const onClick = (e: MouseEvent) => {
-      const hit = t.hitAt(e.target as Element, e.offsetX);
+      const hit = t.hitAt(e.target as Element, { x: e.clientX, y: e.clientY });
       if (hit) latest.current.onHit(hit);
     };
     el.addEventListener("wheel", onWheel, { passive: false });

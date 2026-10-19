@@ -74,7 +74,7 @@ export async function walkTo(page: Page, x: number): Promise<void> {
   expect((await world(page)).hero.x).toBe(x);
 }
 
-/** Take a passage by command (the same command E submits next to it), and wait for the theatre. */
+/** Take a passage by command (the same command the up/down keys submit), and wait for the theatre. */
 export async function cross(page: Page, passage: string): Promise<void> {
   expect(await submit(page, { type: "hero.cross", passage })).toMatchObject({ ok: true });
   // The theatre starts the move on its next frame: wait for it to show the new layer, then to finish.

@@ -25,6 +25,7 @@ import { DEFS, f1 } from "./pen";
 import {
   camFromMatrix,
   camText,
+  EYE_Y,
   EASE,
   GROUND,
   PERSPECTIVE,
@@ -35,10 +36,7 @@ import {
   STAGE_H,
 } from "./geometry";
 
-export type LookTarget =
-  | { kind: "layer"; layer: string; x: number }
-  | { kind: "alley"; passage: string }
-  | { kind: "sky"; layer: string; x: number };
+export type LookTarget = { kind: "prop"; prop: string };
 
 export interface Hit {
   kind: "building" | "prop" | "passage" | "window" | "ground";
@@ -129,7 +127,7 @@ function place(el: HTMLElement, svg: string, w: number, h: number, bitmapScale: 
 }
 
 /** Visual durations, in ms. */
-const MS = { bridge: 1400, stairs: 1000, alley: 1300, door: 1000, look: 850, sky: 1000, back: 800 } as const;
+const MS = { bridge: 1400, stairs: 1000, door: 1000, look: 850, back: 800 } as const;
 
 export class Theatre {
   readonly viewport: HTMLElement;
@@ -154,11 +152,12 @@ export class Theatre {
   private cam: Cam = { tx: 0, ty: 0, cz: 0 };
   private camAnim: Animation | null = null;
   private looks: LookTarget[] = [];
-  private zoom = 0;
   private busyCount = 0;
   private lastFrame = 0;
   private heroX = 0;
-  private alleys = new Map<string, { x0: number; x1: number; depth: number; back: number }>();
+  private revision = -1;
+  private disposed = false;
+  private revealTimers = new Set<ReturnType<typeof setTimeout>>();
   /** Cards that can be left undrawn while they are out of the camera's view. */
   private cullable: { els: HTMLElement[]; depth: number; x0: number; x1: number; out: boolean }[] = [];
 
@@ -183,7 +182,7 @@ export class Theatre {
     host.appendChild(this.frame);
     if (opts.bitmaps) {
       const scale = (host.clientHeight || STAGE_H) / STAGE_H;
-      this.bitmapScale = Math.min(2, Math.max(1, (globalThis.devicePixelRatio || 1) * scale));
+      this.bitmapScale = Math.min(2, Math.max(1.5, (globalThis.devicePixelRatio || 1) * scale));
     }
     const start = ix.pack.start.hero;
     this.heroLayer = start.layer;
@@ -318,6 +317,7 @@ export class Theatre {
         if (ix.layers.get(g.layer)?.walk && g.kind !== "water") {
           el.dataset.ground = g.layer;
           el.dataset.left = String(left);
+          el.dataset.floorY = String(GROUND + g.drop);
         }
       }
       // The distant skyline.
@@ -480,7 +480,6 @@ export class Theatre {
       end.dataset.look = `alley:${p.id}`;
       this.world.appendChild(end);
       this.group(from.id, end);
-      this.alleys.set(p.id, { x0, x1, depth: from.depth, back });
     }
     // Where you step onto it: a hotspot at each outdoor end.
     for (const e of [p.from, p.to]) {
@@ -540,7 +539,13 @@ export class Theatre {
         id: `p${uid(p.el)}`,
         standalone: this.bitmapScale !== null,
       });
-      place(p.el, d.svg, d.width, d.height, this.bitmapScale);
+      // Large back walls are low-detail scenery. Keep their first GPU upload small when
+      // entering a room; nearby fittings and lettering retain the higher raster resolution.
+      const scale =
+        p.el.classList.contains("pt-backdrop") && this.bitmapScale !== null
+          ? Math.min(1, this.bitmapScale)
+          : this.bitmapScale;
+      place(p.el, d.svg, d.width, d.height, scale);
     }
   }
 
@@ -554,7 +559,9 @@ export class Theatre {
     const standalone = this.bitmapScale !== null;
     const swap = (target: Face, d: { svg: string; width: number; height: number }) => {
       if (reveal !== null && !this.opts.reduceMotion) {
-        const old = target.face.cloneNode(true) as HTMLElement;
+        const old = document.createElement("div");
+        old.className = target.face.className;
+        old.append(...target.face.childNodes);
         old.classList.add("pt-old");
         old.removeAttribute("data-style");
         old.removeAttribute("data-state");
@@ -578,6 +585,11 @@ export class Theatre {
 
   private syncBuildings(w: WorldView): void {
     for (const [id, v] of this.buildings) {
+      const active = String(v.def.layer === this.heroLayer);
+      if (v.card.el.dataset.active !== active) {
+        v.card.el.dataset.active = active;
+        for (const side of v.sides) side.el.dataset.active = active;
+      }
       const shown = shownState(w, id);
       const key = `${shown.style}:${shown.state}`;
       const memory = memoryOf(w, id);
@@ -643,20 +655,21 @@ export class Theatre {
   private shotFor(layer: string, x: number): Shot {
     const l = this.ix.layers.get(layer)!;
     const anchor = this.anchors.get(layer);
-    if (anchor !== undefined)
-      return { z: l.depth, k: 1, x: anchor + Math.max(-160, Math.min(160, x)), y: GROUND, ys: GROUND };
+    if (anchor !== undefined) return { z: l.depth, k: 1.65, x: anchor + x, y: GROUND, ys: 610 };
     const [lo, hi] = l.walk ?? [x, x];
-    return { z: l.depth, k: 1 + this.zoom, x: Math.max(lo, Math.min(hi, x)), y: GROUND, ys: GROUND };
+    return { z: l.depth, k: 1.35, x: Math.max(lo, Math.min(hi, x)), y: GROUND, ys: 610 };
   }
 
   private shotForLook(t: LookTarget): Shot {
-    if (t.kind === "sky")
-      return { z: this.ix.layers.get(t.layer)!.depth, k: 0.6, x: t.x, y: SKY_GROUND, ys: 640 };
-    if (t.kind === "alley") {
-      const a = this.alleys.get(t.passage)!;
-      return { z: a.back, k: 1.15, x: (a.x0 + a.x1) / 2, y: GROUND - 60, ys: 470 };
-    }
-    return { z: this.ix.layers.get(t.layer)!.depth, k: 1, x: t.x, y: GROUND, ys: GROUND };
+    const p = this.ix.props.get(t.prop)!;
+    const lm = this.ix.landmarks.get(p.landmark)!;
+    return {
+      z: this.ix.layers.get(p.layer)!.depth,
+      k: 2.1,
+      x: (this.anchors.get(p.layer) ?? 0) + p.x,
+      y: GROUND - lm.height / 2 + p.y,
+      ys: 365,
+    };
   }
 
   private currentShot(): Shot {
@@ -705,13 +718,7 @@ export class Theatre {
     const scene = this.ix.scenes.get(at.scene)!;
     if (scene.kind === "interior") return new Set([at.id]);
     const layers = [...this.ix.layers.values()].filter((l) => l.scene === scene.id);
-    if (look?.kind === "sky") return new Set(layers.filter((l) => l.kind === "far").map((l) => l.id));
-    const focus =
-      look?.kind === "layer"
-        ? this.ix.layers.get(look.layer)!.depth
-        : look?.kind === "alley"
-          ? this.ix.layers.get(this.ix.passages.get(look.passage)!.from.layer)!.depth
-          : at.depth;
+    const focus = at.depth;
     const front = Math.max(...layers.filter((l) => l.kind === "walk").map((l) => l.depth));
     return new Set(
       layers
@@ -739,6 +746,7 @@ export class Theatre {
     }
     this.viewport.dataset.at = this.heroLayer;
     this.viewport.dataset.focus = this.focus;
+    this.viewport.dataset.inspecting = this.looks.at(-1)?.prop ?? "";
     this.refreshFigures();
   }
 
@@ -798,9 +806,11 @@ export class Theatre {
     }
     this.viewport.dataset.at = this.heroLayer;
     this.viewport.dataset.focus = this.focus;
+    this.viewport.dataset.inspecting = this.looks.at(-1)?.prop ?? "";
     this.refreshFigures();
     const arriving = [...after].filter((g) => !before.has(g));
     const reveal = () => {
+      if (this.disposed) return;
       for (const key of arriving) {
         for (const el of this.groups.get(key) ?? []) el.classList.remove("pt-off", "pt-gone");
         this.shownGroups.add(key);
@@ -808,7 +818,13 @@ export class Theatre {
       this.refreshFigures();
     };
     if (this.opts.reduceMotion || ms <= 0) reveal();
-    else setTimeout(reveal, ms * 0.45);
+    else {
+      const timer = setTimeout(() => {
+        this.revealTimers.delete(timer);
+        reveal();
+      }, ms * 0.45);
+      this.revealTimers.add(timer);
+    }
     await this.setCam(shot ?? this.currentShot(), ms);
     reveal();
   }
@@ -837,7 +853,6 @@ export class Theatre {
     const indoors = (l: Layer) => this.ix.scenes.get(l.scene)?.kind === "interior";
     return this.busyWith(async () => {
       this.looks = [];
-      this.zoom = 0;
       if (this.opts.reduceMotion || !passage) {
         this.heroLayer = layer;
         this.heroX = x;
@@ -896,7 +911,7 @@ export class Theatre {
   get focus(): string {
     const look = this.looks.at(-1);
     if (!look) return this.heroLayer;
-    return look.kind === "alley" ? look.passage : look.layer;
+    return this.ix.props.get(look.prop)!.layer;
   }
 
   get at(): string {
@@ -935,7 +950,8 @@ export class Theatre {
   }
 
   /** Draw the world as it is now. `frac` is how far the clock is into the next tick (for smooth walking). */
-  sync(w: WorldView, frac: number, now = performance.now()): void {
+  sync(w: WorldView, frac: number, now = performance.now(), revision?: number): void {
+    if (this.disposed) return;
     const dt = this.lastFrame ? Math.min(0.1, (now - this.lastFrame) / 1000) : 0;
     this.lastFrame = now;
     const h = w.hero;
@@ -955,7 +971,10 @@ export class Theatre {
     this.heroX = x;
     this.putFigure(this.hero, h.layer, x);
     this.hero.style.opacity = this.looking ? "0" : "1";
-    this.syncBuildings(w);
+    if (revision === undefined || revision !== this.revision) {
+      this.syncBuildings(w);
+      this.revision = revision ?? -1;
+    }
     this.syncFigures(w, frac);
     if (!this.camAnim && !this.looking) {
       this.cull([this.shotFor(this.heroLayer, this.heroX)]);
@@ -970,63 +989,27 @@ export class Theatre {
     }
   }
 
-  /** What looking at this element would show, if anything (wheel up on it). */
-  lookTargetAt(el: Element | null): LookTarget | null {
-    const t = el?.closest<HTMLElement>("[data-look]");
-    if (!t) return null;
-    const look = t.dataset.look!;
-    if (look.startsWith("alley:")) return { kind: "alley", passage: look.slice("alley:".length) };
-    const layer = this.ix.layers.get(look);
-    if (!layer) return null;
-    const x = Number(t.dataset.x ?? 0);
-    return layer.kind === "far" ? { kind: "sky", layer: layer.id, x } : { kind: "layer", layer: layer.id, x };
-  }
-
-  /** May the camera go there from here? Only deeper than it is now, and only in this scene. */
   canLook(t: LookTarget): boolean {
-    if (this.busy) return false;
-    const at = this.ix.layers.get(this.heroLayer)!;
-    if (this.ix.scenes.get(at.scene)?.kind === "interior") return false;
-    const current = this.looks.at(-1);
-    if (current?.kind === "sky") return false;
-    const focusDepth = this.currentShot().z;
-    const depth = t.kind === "alley" ? this.alleys.get(t.passage)!.back : this.ix.layers.get(t.layer)!.depth;
-    const layer = t.kind === "alley" ? this.ix.passages.get(t.passage)!.from.layer : t.layer;
-    return depth < focusDepth - 1 && this.ix.layers.get(layer)?.scene === at.scene;
+    return !this.busy && !this.looking && this.inspectionTarget()?.prop === t.prop;
   }
 
-  /** Where W (or ⊕) looks: into an alley you stand at the mouth of, else the next layer back. */
-  autoLook(): LookTarget | null {
-    const at = this.ix.layers.get(this.heroLayer)!;
-    const focus = this.currentShot();
-    if (!this.looking) {
-      for (const [id, a] of this.alleys) {
-        const p = this.ix.passages.get(id)!;
-        if (p.from.layer === at.id && this.heroX >= a.x0 - 120 && this.heroX <= a.x1 + 120)
-          return { kind: "alley", passage: id };
-      }
-    }
-    const deeper = [...this.ix.layers.values()]
-      .filter((l) => l.scene === at.scene && l.kind !== "near" && l.depth < focus.z - 1)
-      .sort((a, b) => b.depth - a.depth)[0];
-    if (!deeper) return null;
-    if (deeper.kind === "far") return { kind: "sky", layer: deeper.id, x: focus.x };
-    const row = this.ix.rows.get(deeper.id) ?? [];
-    let x = focus.x;
-    let best = Infinity;
-    for (const b of row) {
-      const cx = b.x + b.width / 2;
-      if (Math.abs(cx - focus.x) < best) [x, best] = [cx, Math.abs(cx - focus.x)];
-    }
-    return { kind: "layer", layer: deeper.id, x };
+  /** Zoom is available only beside a prop whose scenario explicitly permits inspection. */
+  inspectionTarget(): Extract<LookTarget, { kind: "prop" }> | null {
+    const prop = this.ix.pack.props.find(
+      (p) => p.inspect && p.layer === this.heroLayer && Math.abs(p.x - this.heroX) <= 90,
+    );
+    return prop ? { kind: "prop", prop: prop.id } : null;
+  }
+
+  get canInspect(): boolean {
+    return this.inspectionTarget() !== null;
   }
 
   look(t: LookTarget): Promise<void> {
     if (!this.canLook(t)) return Promise.resolve();
     return this.busyWith(() =>
-      this.transit(t.kind === "sky" ? MS.sky : MS.look, () => {
+      this.transit(MS.look, () => {
         this.looks.push(t);
-        this.zoom = 0;
         this.hero.style.opacity = "0";
       }),
     );
@@ -1035,10 +1018,7 @@ export class Theatre {
   /** Pull the camera back one step: to the previous look, or to where the hero stands. */
   pullBack(): Promise<void> {
     if (this.busy) return Promise.resolve();
-    if (this.looks.length === 0) {
-      this.zoom = Math.max(0, this.zoom - 0.06);
-      return Promise.resolve();
-    }
+    if (this.looks.length === 0) return Promise.resolve();
     return this.busyWith(async () => {
       await this.transit(MS.back, () => {
         this.looks.pop();
@@ -1047,13 +1027,8 @@ export class Theatre {
     });
   }
 
-  /** A little zoom toward the hero's layer when there is nothing deeper to look at. */
-  nudge(): void {
-    if (!this.looking) this.zoom = Math.min(0.18, this.zoom + 0.06);
-  }
-
   /** What a click on `el` means: a building, a prop, a passage end, the window, or a spot on the ground. */
-  hitAt(el: Element | null, offsetX?: number): Hit | null {
+  hitAt(el: Element | null, point?: { x: number; y: number }): Hit | null {
     const t = el?.closest<HTMLElement>(
       "[data-passage],[data-window],[data-prop],[data-building],[data-ground]",
     );
@@ -1065,11 +1040,29 @@ export class Theatre {
     if (t.dataset.prop) return { kind: "prop", layer, x: Number(t.dataset.x), id: t.dataset.prop };
     if (t.dataset.building)
       return { kind: "building", layer, x: Number(t.dataset.x), id: t.dataset.building };
-    const left = Number(t.dataset.left ?? 0);
+    // Mouse offsets belong to the event's innermost SVG/canvas, and are distorted by
+    // perspective. Intersect the screen ray with the floor (or the room's back plane).
+    let x = this.heroX;
+    if (point) {
+      const frame = this.frame.getBoundingClientRect();
+      const sx = (point.x - frame.left) / this.scale;
+      const sy = (point.y - frame.top) / this.scale;
+      const depth = this.ix.layers.get(t.dataset.ground!)!.depth;
+      const k =
+        t.dataset.floorY !== undefined
+          ? (sy - EYE_Y) / (Number(t.dataset.floorY) + this.cam.ty - EYE_Y)
+          : PERSPECTIVE / (PERSPECTIVE - depth - this.cam.cz);
+      if (Math.abs(k) > 0.001)
+        x =
+          this.width / 2 +
+          (sx - this.width / 2) / k -
+          this.cam.tx -
+          (this.anchors.get(t.dataset.ground!) ?? 0);
+    }
     return {
       kind: "ground",
       layer: t.dataset.ground!,
-      x: Math.round(left + (offsetX ?? 0)),
+      x: Math.round(x),
       id: t.dataset.ground!,
     };
   }
@@ -1082,7 +1075,11 @@ export class Theatre {
   }
 
   destroy(): void {
+    this.disposed = true;
+    for (const timer of this.revealTimers) clearTimeout(timer);
+    this.revealTimers.clear();
     this.camAnim?.cancel();
+    for (const animation of this.world.getAnimations({ subtree: true })) animation.cancel();
     this.frame.remove();
   }
 }

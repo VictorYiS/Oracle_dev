@@ -29,7 +29,7 @@ type Overlay = "desk" | "save" | "settings" | "help" | null;
 /** A message on screen: UI copy picked when shown, a pack text, or a refusal. */
 type Toast = { ui: Later } | { pack: string } | { refusal: Rejection };
 
-/** How far E will walk to reach something to use. */
+/** How far an interaction key will walk to reach its target. */
 const USE_SLACK = 160;
 
 export function GameScreen(props: Props) {
@@ -102,8 +102,9 @@ export function GameScreen(props: Props) {
   };
 
   const useNearby = () => {
+    if (theatre.current?.busy) return;
     if (theatre.current?.looking) return show({ ui: (t) => t.hints.onlyLooking });
-    const u = nearestUsable(session.world, ix, USE_SLACK);
+    const u = nearestUsable(session.world, ix, USE_SLACK, "use");
     if (!u) return show({ ui: (t) => t.hints.nothingHere });
     approach(u);
   };
@@ -123,18 +124,31 @@ export function GameScreen(props: Props) {
   const lookIn = () => {
     const t = theatre.current;
     if (!t || t.busy) return;
-    const target = t.autoLook();
-    if (target && t.canLook(target)) void t.look(target).then(rerender);
-    else t.nudge();
+    const target = t.inspectionTarget();
+    if (target && t.canLook(target)) {
+      pendingUse.current = null;
+      stopWalking();
+      void t.look(target).then(rerender);
+    }
+  };
+  const travel = (direction: "in" | "out") => {
+    const t = theatre.current;
+    if (!t || t.busy) return;
+    if (t.looking) return void lookOut();
+    const u = nearestUsable(session.world, ix, USE_SLACK, direction);
+    if (u) approach(u);
+    else show({ ui: (m2) => m2.hints.noPassage });
   };
   const lookOut = () => {
     const t = theatre.current;
+    if (t?.busy) return;
     if (!t) return;
     void t.pullBack().then(rerender);
   };
 
   const onHit = (hit: Hit) => {
     const t = theatre.current;
+    if (t?.busy) return;
     if (t?.looking) return show({ ui: (m2) => m2.hints.onlyLooking });
     if (hit.layer !== session.world.hero.layer) return show({ ui: (m2) => m2.hints.farLayer });
     if (hit.kind === "ground" || hit.kind === "building") {
@@ -156,7 +170,12 @@ export function GameScreen(props: Props) {
   useEffect(() => {
     const held = new Set<string>();
     const onKey = (e: KeyboardEvent) => {
-      if (e.target instanceof HTMLInputElement || e.ctrlKey || e.metaKey || e.altKey) return;
+      if (
+        e.target instanceof HTMLElement &&
+        (e.target.matches("input, textarea, select") || e.target.isContentEditable)
+      )
+        return;
+      if (e.ctrlKey || e.metaKey || e.altKey) return;
       const k = e.key;
       const { overlay, sheet, trayOpen } = keyState.current;
       // A focused button keeps Space and Enter; an open dialog keeps every key but Escape.
@@ -170,6 +189,7 @@ export function GameScreen(props: Props) {
           else if (trayOpen) setTrayOpen(false);
           else lookOut();
         } else if (lower === "a" || k === "ArrowLeft" || lower === "d" || k === "ArrowRight") {
+          if (theatre.current?.busy) return true;
           if (e.repeat || held.has(lower === "a" || k === "ArrowLeft" ? "left" : "right")) return true;
           if (theatre.current?.looking) {
             show({ ui: (t) => t.hints.onlyLooking });
@@ -180,9 +200,13 @@ export function GameScreen(props: Props) {
           pendingUse.current = null;
           const [lo, hi] = layerRange();
           walkTo(left ? lo : hi);
-        } else if (lower === "w" || k === "ArrowUp") lookIn();
-        else if (lower === "s" || k === "ArrowDown") lookOut();
-        else if (lower === "e") useNearby();
+        } else if (lower === "w" || k === "ArrowUp") {
+          if (!e.repeat) travel("in");
+        } else if (lower === "s" || k === "ArrowDown") {
+          if (!e.repeat) travel("out");
+        } else if (lower === "f") {
+          if (!e.repeat) lookIn();
+        } else if (lower === "e") useNearby();
         else if (lower === "t") session.submit({ type: "hero.wait", minutes: 60 });
         else if (lower === "p") setTrayOpen(!trayOpen);
         else if (k === " ") {
@@ -207,6 +231,10 @@ export function GameScreen(props: Props) {
         lower === "a" || k === "ArrowLeft" ? "left" : lower === "d" || k === "ArrowRight" ? "right" : null;
       if (side && held.delete(side) && held.size === 0) stopWalking();
     };
+    const onBlur = () => {
+      held.clear();
+      stopWalking();
+    };
     // A button clicked with the mouse gives focus back, so Space and Enter stay game keys for
     // mouse players; keyboard players who tab to a button keep it focused and activate it.
     const onPointerUp = (e: PointerEvent) => {
@@ -215,10 +243,12 @@ export function GameScreen(props: Props) {
     };
     window.addEventListener("keydown", onKey);
     window.addEventListener("keyup", onKeyUp);
+    window.addEventListener("blur", onBlur);
     window.addEventListener("pointerup", onPointerUp);
     return () => {
       window.removeEventListener("keydown", onKey);
       window.removeEventListener("keyup", onKeyUp);
+      window.removeEventListener("blur", onBlur);
       window.removeEventListener("pointerup", onPointerUp);
     };
   }, [session]);
@@ -227,7 +257,7 @@ export function GameScreen(props: Props) {
   const waiting = waitingCases(w).length;
   const focus = theatre.current?.focus ?? w.hero.layer;
   const hint = near
-    ? fmt(m.hints.use, {
+    ? fmt(near.kind === "passage" ? (near.direction === "in" ? m.hints.goIn : m.hints.goOut) : m.hints.use, {
         what:
           near.kind === "window"
             ? m.hints.window
@@ -247,6 +277,7 @@ export function GameScreen(props: Props) {
   const padHold = (side: "left" | "right") => ({
     onPointerDown: (e: PointerEvent) => {
       e.preventDefault();
+      if (theatre.current?.busy) return;
       if (theatre.current?.looking) return show({ ui: (t) => t.hints.onlyLooking });
       const [lo, hi] = layerRange();
       pendingUse.current = null;
@@ -278,6 +309,7 @@ export function GameScreen(props: Props) {
             rerender();
           }}
           onHit={onHit}
+          onViewChange={rerender}
         />
         <div class="hud" data-testid="hud">
           <p class="where">
@@ -309,13 +341,31 @@ export function GameScreen(props: Props) {
           <button type="button" aria-label={m.pad.right} data-testid="pad-right" {...padHold("right")}>
             ▶
           </button>
+          <button type="button" aria-label={m.pad.goIn} data-testid="pad-up" onClick={() => travel("in")}>
+            ↑
+          </button>
+          <button type="button" aria-label={m.pad.goOut} data-testid="pad-down" onClick={() => travel("out")}>
+            ↓
+          </button>
           <button type="button" aria-label={m.pad.use} data-testid="pad-use" onClick={useNearby}>
             E
           </button>
-          <button type="button" aria-label={m.pad.lookIn} data-testid="pad-in" onClick={lookIn}>
+          <button
+            type="button"
+            aria-label={m.pad.lookIn}
+            data-testid="pad-in"
+            disabled={!theatre.current?.canInspect || theatre.current.looking}
+            onClick={lookIn}
+          >
             ⊕
           </button>
-          <button type="button" aria-label={m.pad.lookOut} data-testid="pad-out" onClick={lookOut}>
+          <button
+            type="button"
+            aria-label={m.pad.lookOut}
+            data-testid="pad-out"
+            disabled={!theatre.current?.looking}
+            onClick={lookOut}
+          >
             ⊖
           </button>
         </div>

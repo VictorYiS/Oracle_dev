@@ -1,5 +1,5 @@
 // P2 acceptance A8: the paper theatre's transitions stay smooth. For each kind (crossing the
-// bridge, looking across, pulling back, looking into the distance, going through a door) the test
+// bridge, going through a door, inspecting a bookcase, returning to the hero) the test
 // records the time between animation frames from just before the move until just after it ends,
 // and prints the median, p95 and maximum. Budget: median ≤ 34 ms and maximum ≤ 100 ms.
 import { cpus, platform, totalmem } from "node:os";
@@ -40,54 +40,10 @@ async function recordFrames(page: Page, act: () => Promise<void>): Promise<numbe
 }
 
 function stats(frames: number[]) {
+  expect(frames.length, "enough animation frames to measure").toBeGreaterThan(5);
   const sorted = [...frames].sort((a, b) => a - b);
   const at = (q: number) => sorted[Math.min(sorted.length - 1, Math.floor(sorted.length * q))]!;
   return { n: frames.length, median: at(0.5), p95: at(0.95), max: sorted[sorted.length - 1]!, raw: frames };
-}
-
-/** A point on screen where one of `selector`'s elements is the thing under the pointer. */
-async function uncovered(page: Page, selector: string): Promise<{ x: number; y: number }> {
-  const point = await page.evaluate((sel) => {
-    for (const el of document.querySelectorAll(sel)) {
-      const r = el.getBoundingClientRect();
-      for (const fy of [0.08, 0.2, 0.4]) {
-        const x = r.left + r.width / 2;
-        const y = r.top + r.height * fy;
-        if (x < 0 || y < 60 || x > innerWidth || y > innerHeight) continue;
-        if (el.contains(document.elementFromPoint(x, y))) return { x, y };
-      }
-    }
-    return null;
-  }, selector);
-  if (!point) throw new Error(`nothing matching ${selector} is in view`);
-  return point;
-}
-
-/** Look at a layer the way this device does it: the wheel over something there, or ⊕ on a phone. */
-async function lookAt(page: Page, isMobile: boolean, selector: string, focus: string): Promise<void> {
-  const viewport = page.locator("#viewport");
-  if (isMobile) {
-    for (let i = 0; i < 4 && (await viewport.getAttribute("data-focus")) !== focus; i++) {
-      await page.getByTestId("pad-in").click();
-      await settled(page);
-    }
-  } else {
-    const at = await uncovered(page, selector);
-    await page.mouse.move(at.x, at.y);
-    await page.mouse.wheel(0, -120);
-  }
-  await expect(viewport).toHaveAttribute("data-focus", focus);
-}
-
-async function pullBack(page: Page, isMobile: boolean, focus: string): Promise<void> {
-  const viewport = page.locator("#viewport");
-  for (let i = 0; i < 4 && (await viewport.getAttribute("data-focus")) !== focus; i++) {
-    if (isMobile) await page.getByTestId("pad-out").click();
-    else await page.mouse.wheel(0, 120);
-    await settled(page);
-    await page.waitForTimeout(400); // the wheel is locked briefly after each step
-  }
-  await expect(viewport).toHaveAttribute("data-focus", focus);
 }
 
 test("transitions keep the frame time down @perf", async ({ page, browserName }, info) => {
@@ -97,17 +53,6 @@ test("transitions keep the frame time down @perf", async ({ page, browserName },
   await startDay(page);
   await pause(page);
   const results: Record<string, ReturnType<typeof stats>> = {};
-
-  results["look across"] = stats(
-    await recordFrames(page, () =>
-      lookAt(page, isMobile, '[data-building="bld.eb_06"]:not([data-face])', "layer.far_bank"),
-    ),
-  );
-  results["pull back"] = stats(await recordFrames(page, () => pullBack(page, isMobile, "layer.street")));
-  results["look far"] = stats(
-    await recordFrames(page, () => lookAt(page, isMobile, ".pt-tower", "layer.sky")),
-  );
-  await pullBack(page, isMobile, "layer.street");
 
   await walkTo(page, 2900);
   await cross(page, "passage.stairs");
@@ -125,6 +70,24 @@ test("transitions keep the frame time down @perf", async ({ page, browserName },
       await expect(page.locator("#viewport")).toHaveAttribute("data-at", "layer.room_17b");
     }),
   );
+
+  await walkTo(page, -360);
+  await expect(page.getByTestId("pad-in")).toBeEnabled();
+  results["inspect"] = stats(
+    await recordFrames(page, async () => {
+      if (isMobile) await page.getByTestId("pad-in").click();
+      else await page.keyboard.press("f");
+      await expect(page.locator("#viewport")).toHaveAttribute("data-inspecting", "prop.shelf_17b");
+    }),
+  );
+  results["pull back"] = stats(
+    await recordFrames(page, async () => {
+      if (isMobile) await page.getByTestId("pad-out").click();
+      else await page.keyboard.press("Escape");
+      await expect(page.locator("#viewport")).toHaveAttribute("data-inspecting", "");
+    }),
+  );
+  await info.attach("frame-times", { body: JSON.stringify(results), contentType: "application/json" });
 
   const machine = `${platform()} · ${cpus()[0]?.model ?? "?"} ×${cpus().length} · ${Math.round(totalmem() / 2 ** 30)} GB · ${browserName} ${page.context().browser()?.version() ?? ""} · ${info.project.name}`;
   console.log(`machine: ${machine}`);

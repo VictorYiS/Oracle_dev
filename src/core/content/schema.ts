@@ -209,6 +209,8 @@ export const Prop = z
     landmark: ContentId,
     /** What you find out when you use it. */
     text: TextRef.optional(),
+    /** Allow close inspection while standing beside this prop. */
+    inspect: z.boolean().optional(),
   })
   .strict();
 

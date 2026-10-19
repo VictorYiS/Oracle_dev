@@ -5,7 +5,7 @@ import { writeFileSync } from "node:fs";
 import { expect, test, type Page } from "@playwright/test";
 import { en } from "../../src/ui/i18n/en";
 import { zhCN } from "../../src/ui/i18n/zh-CN";
-import { newGame } from "./helpers";
+import { newGame, walkTo } from "./helpers";
 
 test.use({ locale: "zh-CN" });
 
@@ -89,11 +89,10 @@ test("every screen is in Chinese: the street, the window, a paper, the procedure
   await expectChineseOnly(page, "the key help");
   await page.keyboard.press("Escape");
 
-  // Looking: the camera's line in the corner.
-  await page.keyboard.press("w");
-  await expect(page.getByTestId("focus")).toHaveText("河岸");
-  await expectChineseOnly(page, "looking across");
-  await page.keyboard.press("Escape");
+  // The directional passage hint is localized too.
+  await walkTo(page, 2900);
+  await expect(page.getByTestId("hint")).toContainText("\u2191 / W");
+  await expectChineseOnly(page, "the passage hint");
 
   await page.evaluate(() => window.oracle!.advance(2000));
   await expect(page.getByTestId("phase")).toHaveText("黄昏");

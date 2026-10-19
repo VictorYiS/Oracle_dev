@@ -58,16 +58,21 @@ export const en = {
   },
 
   pad: {
+    goIn: "Go inward",
+    goOut: "Go outward",
     left: "Walk left",
     right: "Walk right",
     use: "Use",
-    lookIn: "Look further",
+    lookIn: "Inspect nearby",
     lookOut: "Look back",
   },
 
   hints: {
-    look: "Wheel up or W: look closer. You stay where you are.",
-    farLayer: "That is further away: you can look (wheel up), but to go there you have to walk.",
+    noPassage: "There is no passage in that direction nearby.",
+    goIn: "↑ / W: {what}",
+    goOut: "↓ / S: {what}",
+    look: "Wheel up or F beside a bookcase: inspect it.",
+    farLayer: "That is further away. Take the passages to get there.",
     onlyLooking: "You are only looking. To get there, walk.",
     nothingHere: "Nothing to use here.",
     use: "E: {what}",
@@ -223,8 +228,8 @@ export const en = {
     keys: {
       walk: "A / D or ← / →",
       click: "Click the ground",
-      look: "Wheel up / W / ↑",
-      back: "Wheel down / S / ↓ / Esc",
+      look: "↑ / W",
+      back: "↓ / S; Esc",
       use: "E",
       wait: "T",
       space: "Space",
@@ -236,9 +241,9 @@ export const en = {
     does: {
       walk: "Walk along where you are",
       click: "Walk there, or to the thing you clicked",
-      look: "Look closer, at what is under the pointer (you stay where you are)",
-      back: "Look back; close what is open",
-      use: "Use what is next to you: the window, a passage, a door, a notice",
+      look: "Take a nearby passage inward; F or wheel up inspects a nearby bookcase",
+      back: "Take a passage outward; Esc leaves inspection or closes a panel",
+      use: "Use the nearby window or notice",
       wait: "Let an hour pass",
       space: "Pause or resume",
       speeds: "Speed ×1, ×2, ×4",

@@ -57,16 +57,21 @@ export const zhCN: Messages = {
   },
 
   pad: {
+    goIn: "向里走",
+    goOut: "向外走",
     left: "向左走",
     right: "向右走",
     use: "使用",
-    lookIn: "看远一层",
+    lookIn: "仔细观察",
     lookOut: "拉回",
   },
 
   hints: {
-    look: "滚轮↑ 或 W：推近去看。人不会过去。",
-    farLayer: "那是远处的一层：可以看（滚轮↑），要过去得走过去。",
+    noPassage: "附近没有这个方向的通道。",
+    goIn: "↑ / W：{what}",
+    goOut: "↓ / S：{what}",
+    look: "在书柜前用滚轮↑ 或 F 仔细看。",
+    farLayer: "那是远处的一层，走通道才能过去。",
     onlyLooking: "你只是在看。要到那里，得走过去。",
     nothingHere: "附近没有可以用的东西。",
     use: "E：{what}",
@@ -219,8 +224,8 @@ export const zhCN: Messages = {
     keys: {
       walk: "A / D 或 ← / →",
       click: "点地面",
-      look: "滚轮↑ / W / ↑",
-      back: "滚轮↓ / S / ↓ / Esc",
+      look: "↑ / W",
+      back: "↓ / S；Esc",
       use: "E",
       wait: "T",
       space: "空格",
@@ -232,9 +237,9 @@ export const zhCN: Messages = {
     does: {
       walk: "在当前这一层走动",
       click: "走到那里，或者走到你点的东西跟前",
-      look: "推近去看指针下的东西（人不会过去）",
-      back: "拉回镜头；关掉打开的东西",
-      use: "使用身边的东西：窗口、通道、门、告示",
+      look: "沿附近的通道向里走；书柜前按 F 或滚轮↑ 仔细看",
+      back: "沿通道向外走；Esc 退出观察或关闭面板",
+      use: "使用身边的窗口或告示",
       wait: "让一小时过去",
       space: "暂停或继续",
       speeds: "速度 ×1、×2、×4",

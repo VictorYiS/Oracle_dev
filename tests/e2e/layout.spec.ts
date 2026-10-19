@@ -18,15 +18,21 @@ test("reduce motion: the bridge is crossed at once, and nothing animates", async
   await cross(page, "passage.stairs");
   await walkTo(page, 1500);
   await settled(page);
-  if (phone) await page.getByTestId("pad-use").click();
-  else await page.keyboard.press("e");
+  if (phone) await page.getByTestId("pad-up").click();
+  else await page.keyboard.press("ArrowUp");
   await expect(page.locator("#viewport")).toHaveAttribute("data-at", "layer.far_bank", { timeout: 300 });
   expect((await world(page)).hero.layer).toBe("layer.far_bank");
   expect(await page.evaluate(() => document.getAnimations().length)).toBe(0);
-  // Looking cuts too.
+  // Contextual inspection cuts too, without animating furniture or the camera.
+  await walkTo(page, 2220);
+  await cross(page, "passage.door_17b");
+  await walkTo(page, -360);
+  await expect(page.getByTestId("pad-in")).toBeEnabled();
   if (phone) await page.getByTestId("pad-in").click();
-  else await page.keyboard.press("w");
-  await expect(page.locator("#viewport")).toHaveAttribute("data-focus", "layer.sky", { timeout: 300 });
+  else await page.keyboard.press("f");
+  await expect(page.locator("#viewport")).toHaveAttribute("data-inspecting", "prop.shelf_17b", {
+    timeout: 300,
+  });
   expect(await page.evaluate(() => document.getAnimations().length)).toBe(0);
   // The choice is remembered in this browser.
   await page.reload();

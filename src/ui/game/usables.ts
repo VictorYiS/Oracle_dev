@@ -9,6 +9,7 @@ export interface Usable {
   x: number;
   /** How close you must be to use it. */
   reach: number;
+  direction?: "in" | "out";
 }
 
 const PROP_REACH = 70;
@@ -18,7 +19,14 @@ export function usablesOn(w: WorldView, ix: PackIndex, layer: string): Usable[] 
   if (ix.window.layer === layer)
     out.push({ kind: "window", id: "window", x: ix.window.x, reach: ix.window.reach });
   for (const p of ix.passagesAt.get(layer) ?? []) {
-    out.push({ kind: "passage", id: p.id, x: ends(p, layer)!.here.x, reach: ix.params.passage_reach });
+    const e = ends(p, layer)!;
+    out.push({
+      kind: "passage",
+      id: p.id,
+      x: e.here.x,
+      reach: ix.params.passage_reach,
+      direction: ix.layers.get(e.there.layer)!.depth < ix.layers.get(layer)!.depth ? "in" : "out",
+    });
   }
   for (const prop of ix.pack.props) {
     if (prop.layer === layer && prop.text)
@@ -28,9 +36,15 @@ export function usablesOn(w: WorldView, ix: PackIndex, layer: string): Usable[] 
 }
 
 /** The nearest usable thing within `slack` of being in reach (0: only what is in reach now). */
-export function nearestUsable(w: WorldView, ix: PackIndex, slack = 0): (Usable & { dist: number }) | null {
+export function nearestUsable(
+  w: WorldView,
+  ix: PackIndex,
+  slack = 0,
+  direction?: "in" | "out" | "use",
+): (Usable & { dist: number }) | null {
   let best: (Usable & { dist: number }) | null = null;
   for (const u of usablesOn(w, ix, w.hero.layer)) {
+    if (direction === "use" ? u.kind === "passage" : direction && u.direction !== direction) continue;
     const dist = Math.abs(u.x - w.hero.x);
     if (dist > u.reach + slack) continue;
     if (!best || dist - u.reach < best.dist - best.reach) best = { ...u, dist };

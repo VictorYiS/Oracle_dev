@@ -12,8 +12,8 @@ A narrative management game about a town that can hand everything to an AI. You 
 1. **New game**, then **Read the morning** and **Open the window**. Time runs only in the daytime.
 2. You start at the window. Press **E** to open it. Visitors queue up: read their papers (each says where it came from and when), check the procedure, and stamp a decision, or **Adopt** what the Oracle suggests.
 3. Whatever you adopt without checking goes on your **pending checks** tray, with how to check it: go and look, or read the original papers at the window.
-4. Leave the window and walk: **A / D** or click the ground. **E** takes the steps down to the river, the footbridge, the alley or a door. Every passage takes time, and while you are out, the queue grows.
-5. **Looking is not going.** Wheel up (or **W**) over something further away and the camera goes there; you stay where you are. Wheel down, **S** or **Esc** bring it back. To get there, walk.
+4. Leave the window and walk: **A / D** or **← / →**, or click the ground. Near the steps, bridge, alley or a door, **↑ / W** goes inward and **↓ / S** returns. Every passage takes time, and while you are out, the queue grows.
+5. **Looking is not going.** Beside a bookcase, wheel up or press **F** to inspect it. Wheel down or **Esc** returns to your character. Zoom is available at designated objects; crossing the town means walking there.
 6. Buildings you have never seen are drawn by the Oracle, from the records. The ones you have seen are drawn as you remember them, and memories fade. They do not update themselves: go back to find out what changed.
 
 All the keys and the phone's buttons are in [guide/controls.md](guide/controls.md). **Settings** has a **Reduce motion** switch.

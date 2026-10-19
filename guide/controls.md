@@ -14,19 +14,20 @@ You are the Interpreter. You sit at a window on the street and decide what peopl
 
 - **A / D** or **← / →**: walk along the layer you are on (the street, the riverbank, the far bank, a room).
 - **Click the ground** to walk there; click something on your layer to walk to it and use it.
-- **E**: use what is next to you: the window, a passage, a door, a notice. When something is in reach, a short hint at the bottom says what **E** will do.
-- On a phone: hold **◀ ▶** to walk, **E** to use.
+- **↑ / W**: take a nearby passage inward, including steps, bridges, alleys and doors. **↓ / S** takes a passage outward. The hint names the available passage and its key.
+- **E**: use the nearby window or notice.
+- On a phone: hold **◀ ▶** to walk, tap **↑ ↓** for passages, **E** to use an object.
 
 Walking takes game time, and so does every passage: the steps down to the river, the footbridge, the alley, a door.
 
 ## Looking is not going
 
-The street is a paper theatre: cards standing at different depths. You can look further than you can reach:
+The street is a paper theatre: cards standing at different depths. Distant buildings grow as you approach their layer; rooms use a closer view that follows you.
 
-- **Wheel up** over something further away, or **W** / **↑**: the camera moves closer to it. **You stay where you are.**
-- **Wheel down**, **S** / **↓** or **Esc**: the camera comes back, one step at a time.
-- On a phone: **⊕** looks further, **⊖** looks back.
-- At the mouth of an alley, **W** (or **⊕**) looks down it.
+- Stand beside a bookcase in the registry or 17B. **Wheel up** or **F** inspects it. **You stay where you are.**
+- **Wheel down** or **Esc** returns to the character. **↑ / ↓** also leaves inspection before you can travel.
+- On a phone: **⊕** inspects, **⊖** returns. The buttons are available only when you can use them.
+- Ordinary street scrolling does not move the camera. Zoom is available only at designated objects.
 
 The top-left corner always says where *you* are and where the camera is *looking*. Clicking something on a far layer does nothing: to get there, walk, and take the passages.
 
