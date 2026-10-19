@@ -41,6 +41,21 @@ describe("hard rule 1: src/core stays headless", () => {
     expect(coreTypeErrors(`export const add = (a: number, b: number): number => a + b;\n`)).toEqual([]);
   });
 
+  it("blocks Node modules, but not local modules that share a name", async () => {
+    expect(await lintCore(`import { join } from "path";\nexport const j = join;\n`)).toContain(
+      "no-restricted-imports",
+    );
+    expect(await lintCore(`import { readFileSync } from "fs";\nexport const r = readFileSync;\n`)).toContain(
+      "no-restricted-imports",
+    );
+    expect(await lintCore(`import { join } from "node:path";\nexport const j = join;\n`)).toContain(
+      "no-restricted-imports",
+    );
+    expect(await lintCore(`import { findPath } from "../world/path";\nexport const f = findPath;\n`)).toEqual(
+      [],
+    );
+  });
+
   it("blocks UI imports", async () => {
     expect(await lintCore(`import { h } from "preact";\nexport const x = h;\n`)).toContain(
       "no-restricted-imports",

@@ -1,5 +1,17 @@
 # Changelog
 
+## P1 · The world, by hand
+
+- A deterministic world core: plain-JSON state in integers, a five-phase day (time runs only by day), dusk settlement (production, food, departures, regrowth) and dawn scenario events. Two runs and a replay of 100 days agree, and Chromium, Firefox and Node give the same hashes.
+- One way in: every change is a command through the command bus, refused with a structured reason (`SCHEMA_INVALID`, `NO_PERMISSION`, `STALE_VERSION`, `INVALID_TARGET`, `INSUFFICIENT_RESOURCE`, `PRECONDITION_FAILED`). Only the world's own systems and the bus may write state; a lint rule and an architecture test hold that line.
+- Every event records its cause, back to the command or routine that started it.
+- Units walk (deterministic A*), gather and deliver, and build. Fog hides what no one has seen. A full store drops what does not fit instead of trapping the unit.
+- Saves: a dusk snapshot plus the commands since, in the browser or as a file, with clear errors for files from another version or another scenario. Autosave at dusk.
+- The Interpreter gets a 48×48 map, 7 kinds of ground, 6 kinds of resource node, 8 buildings, 3 unit types, 3 weathers and 7 events, in English and Chinese.
+- Packs load on demand as separate files (no scenario text in the JavaScript), and can be imported from a folder or a `.zip`. A test pack swaps in a 24×24 map with no engine change.
+- The browser game: title screen, canvas map with pan and zoom, top bar with speed and phase, selection panel with orders, build menu, event feed, save menu and key help, with a live English/Chinese switch.
+- Tools: a scripted bot player; `npm run determinism`, `npm run bench` (30 game days in about 0.1 s), and a smoke run on the real simulation.
+
 ## P0 · Foundations
 
 - Project skeleton: Vite, TypeScript and Preact; Vitest, Playwright, ESLint and Prettier. GitHub Actions runs every check before deploying to GitHub Pages.
